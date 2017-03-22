@@ -6,15 +6,14 @@ import pdb
 import random
 
 def generate_votes(row=10, col=10):
-    votes = []
-    v = []
+    votes = {}
 
     for x in range(row):
         for y in range(col):
             democrats = random.randint(0, 50)
             republicans = random.randint(0, 50) * 3
-            votes += [1] if democrats > republicans else [0]
-            v[x,y] = {'d': democrats, 'r': republicans}
+            # votes += [1] if democrats > republicans else [0]
+            votes[x,y] = {'d': democrats, 'r': republicans}
     return votes
 
 
@@ -24,12 +23,16 @@ def main():
     col = 10
     constituency = 10
     s = {}
-    w = {}
+    wd = {}
+    wr = {}
+    winner = {}
     votes = generate_votes(row, col)
 
     # Gewinner variabeln für die 10 Wahlbezirke
     for i in range(constituency):
-        w[i] = model.addVar(vtype="I", name="win_w{}".format(i))
+        wd[i] = model.addVar(vtype="I", name="wd{}".format(i))
+        wr[i] = model.addVar(vtype="I", name="wr{}".format(i))
+        winner[i] = model.addVar(vtype="B", name="winner{}".format(i))
 
     # Variabeln für die einzelnen stimmen pro quadrat definieren
     for x in range(row):
@@ -44,7 +47,7 @@ def main():
 
     # Nicht mehr als 10 quadrate pro Wahlbezirk
     for w in range(constituency):
-        model.addCons(quicksum(s[x, y, w] for x in range(col) for y in range(row)) = 10, name="Bezirk_{}".format(w))
+        model.addCons(quicksum(s[x, y, w] for x in range(col) for y in range(row)) == 10, name="Bezirk_{}".format(w))
 
     # Es gibt eine neue Variable für jedes W[0...9] für demokraten und für Republikaner
     # In diesem W summieren wir die Werte der Stimmen auf. Somit haben wir 
@@ -52,6 +55,9 @@ def main():
     # Diese wd und wr werden wir nachher mit einem IF abfühlen
 
     # Stimme im W0_d = quicksum(s[x, y, 0] * v[0]{d}  for x in range(col) for y in range(row)
+    for w in range(constituency):
+        wd[w] = quicksum(s[x, y, w] * votes[x,y]['d']  for x in range(col) for y in range(row))
+        wr[w] = quicksum(s[x, y, w] * votes[x,y]['r']  for x in range(col) for y in range(row))
     # w0_r = quicksum(s[x, y, 0] * v[0]{r}  for x in range(col) for y in range(row)
     # s[x, y, 0] * v[0]{d} 
 
@@ -59,16 +65,22 @@ def main():
     # Diese Variabel muss maximiert werden.
     # 1 neue model.addVar(vtype="B", name="demo_win_w0")
     # Diese Variable wird gesetzt: Diese Var ist 1 wen w0_d grösser ist als w0_r und ansonsten 0
-
+    for w in range(constituency):
+        pdb.set_trace()
+        if wd[w] > wr[w]:
+            model.addCons(winner[w] == 1)
+        else:
+            model.addCons(winner[w] == 0)
 
     # Todo:
     # Bedingung: Welcher Wahlbezirk gewinnt
     # 10 quadrate = 1 Wahlbezirk
 
     for w in range(constituency):
-        for i in [(x, y) for x in range(col) for y in range(row)]:
-            if s[i[0], i[1], w] * v[i[0],i[1]]['d'] > s[i[0], i[1], w] * v[i[0],i[1]]['r']
-        model.setObjective(quicksum(s[x, y, w]*v[x,y] for x in range(col) for y in range(row)), "maximize")
+        model.setObjective(quicksum(winner[w]), "maximize")
+        #for i in [(x, y) for x in range(col) for y in range(row)]:
+        #    if s[i[0], i[1], w] * v[i[0],i[1]]['d'] > s[i[0], i[1], w] * v[i[0],i[1]]['r']
+             # model.setObjective(quicksum(s[x, y, w]*v[x,y] for x in range(col) for y in range(row)), "maximize")
 
     # Total Democrats: w3 = total_d*1 + total_r
     # model.setObjective(quicksum(demo_win_w0[i] for i in range(10)), "maximize")
