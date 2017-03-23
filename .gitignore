@@ -87,3 +87,7 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# SCIPT
+scipoptsuite-3.2.1
+PySCIPOpt
