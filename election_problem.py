@@ -1,39 +1,48 @@
 #!/usr/bin/env python3
 
-import sys
-from pyscipopt import Model, quicksum
+import logging
+import time
 import pdb
 import random
+from pyscipopt import Model, quicksum, Conshdlr, SCIP_RESULT, SCIP_PARAMSETTING, SCIP_HEURTIMING
+from electionHandler import ElectionHdlr
+from election_heuer import ElectionHeuer
 
-def generate_votes(row=10, col=10):
+#logging.basicConfig(level=logging.INFO)
+
+def generate_votes(row=10, col=10, multiplier=2):
     votes = {}
-
+    sum_demo = 0
+    sum_repu = 0
     for x in range(row):
         for y in range(col):
-            democrats = random.randint(0, 50)
-            republicans = random.randint(0, 50) * 3
+            democrats = random.randint(0, 500)
+            if random.randint(0, 1) > 0:
+                republicans = random.randint(0, 500) * multiplier
+            else:
+                republicans = random.randint(0, 500)
+            sum_demo += democrats
+            sum_repu += republicans
             votes[x, y] = {'d': democrats, 'r': republicans}
+    print("Democrats total: {} votes, Republicans total: {} votes".format(sum_demo, sum_repu))
     return votes
 
 
-def main():
+def solve(row=10, col=10, constituency=10):
     model = Model("Election")
-    row = 10
-    col = 10
-    constituency = 10
-    s = {}
-    wd = {}
-    wr = {}
-    winner = {}
-    votes = generate_votes(row, col)
+    s = {}       # Stimme
+    wd = {}      # Gewinner democ
+    wr = {}      # Gewinner repub
+    winner = {}  # Gewinner Wahlbezirk
+    votes = generate_votes(row, col, multiplier=1)
 
-    v = {}
-    for x in range(row):
-        out = ''
-        for y in range(col):
-            out += "{}  |  ".format(votes[x, y])
-        #print(out)
+    #pdb.set_trace()
 
+    heuristic = ElectionHeuer(s, logger=logger)
+    # includeHeur(heur, name, desc, dispatcher, priority, freq)
+    # model.includeHeur(heuristic, "PyHeur", "custom heuristic implemented in python", "Y",
+    #                   timingmask=SCIP_HEURTIMING.BEFORENODE)
+    # model.setPresolve(SCIP_PARAMSETTING.OFF)
 
     # Gewinner variabeln für die 10 Wahlbezirke
     for i in range(constituency):
@@ -52,6 +61,8 @@ def main():
             for w in range(constituency):
                 s[x, y, w] = model.addVar(vtype="B", name="{}-{}-{}".format(x, y, w))
 
+    # CONSTRAINTS
+    # - - - - - - - - - - - - - - - - - -
     # Jeder Staat nur in einem Bezirk
     for x in range(row):
         for y in range(col):
@@ -59,7 +70,7 @@ def main():
 
     # Nicht mehr als 10 quadrate pro Wahlbezirk
     for w in range(constituency):
-        model.addCons(quicksum(s[x, y, w] for x in range(col) for y in range(row)) == 10,
+        model.addCons(quicksum(s[x, y, w] for x in range(col) for y in range(row)) == row,
                       name="Bezirk_{}".format(w))
 
     # Es gibt eine neue Variable für jedes Wd[0...9] für demokraten und wr[0...9] für Republikaner
@@ -80,41 +91,78 @@ def main():
     # 1 neue model.addVar(vtype="B", name="demo_win_w0")
     # Diese Variable wird gesetzt: Diese Var ist 1 wen w0_d grösser ist als w0_r und ansonsten 0
     for w in range(constituency):
-        model.addCons(wd[w] - wr[w] <= 150 * winner[w])
+        model.addCons(wd[w] - wr[w] <= 1000 * winner[w])
         model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
 
+    model.addCons(quicksum(winner[w] for w in range(constituency)) >= 6)
+
+    # conshdlr = ElectionHdlr(s, logger=logger)
+    # model.setBoolParam("misc/allowdualreds", False)
+    # model.includeConshdlr(conshdlr, "election",
+    #                      "Election", chckpriority=-10,
+    #                      needscons=False)
+
     model.setObjective(quicksum(winner[w] for i in range(10)), "maximize")
-    # Total Democrats: w3 = total_d*1 + total_r
-    # model.setObjective(quicksum(demo_win_w0[i] for i in range(10)), "maximize")
 
     model.hideOutput()
     model.optimize()
 
     if model.getStatus() != 'optimal':
-        print('No solution found!') 
-        sys.exit(1)
-    print("Solution found")
+        print('No solution found!')
+        return False
 
+    print("Solution found")
     solution = {}
-    ww = {1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}}
+    ww = {1: {'d': 0, 'r': 0},
+          2: {'d': 0, 'r': 0},
+          3: {'d': 0, 'r': 0},
+          4: {'d': 0, 'r': 0},
+          5: {'d': 0, 'r': 0},
+          6: {'d': 0, 'r': 0},
+          7: {'d': 0, 'r': 0},
+          8: {'d': 0, 'r': 0},
+          9: {'d': 0, 'r': 0},
+          10: {'d': 0, 'r': 0}}
+
     for x in range(row):
         out = ''
         for y in range(col):
-            for w in range(10):
-                if model.getVal(s[x, y, w]) >= 0.5:
+            for w in range(constituency):
+                if model.getVal(s[x, y, w]) >= 0.8:
                     solution[x, y] = w + 1
-
-                    if 'd' not in ww[w+1]:
-                        ww[w+1]['d'] = 0
-                    if 'r' not in ww[w+1]:
-                        ww[w+1]['r'] = 0
                     ww[w+1]['d'] += votes[x, y]['d']
                     ww[w+1]['r'] += votes[x, y]['r']
-
-            out += "{} ({}/{}) | ".format(solution[x, y], ww[solution[x, y]]['d'], ww[solution[x, y]]['r'])
+            out += "{:2} | ".format(solution[x, y])
         print(out)
 
+    print()
+    for w in ww.keys():
+        winner = 'D' if ww[w]['d'] >= ww[w]['r'] else 'R'
+        print('{:2}: {} (Demo: {}, Repu: {})'.format(w, winner, ww[w]['d'], ww[w]['r']))
+    return True
 
-# Create vars
+
+    # for x in range(row):
+    #     out = ''
+    #     for y in range(col):
+    #         out += "{} | ".format(votes[x,y])
+    #     print(out)
+
+def main():
+    solve()
+
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+
+    # create a file handler
+    handler = logging.FileHandler('/tmp/election.log', mode='w')
+    handler.setLevel(logging.DEBUG)
+
+    # create a logging format
+    formatter = logging.Formatter('%(name)s: [%(levelname)s] - %(message)s')
+    handler.setFormatter(formatter)
+
+    # add the handlers to the logger
+    logger.addHandler(handler)
+    logger.info("Start Problem")
     main()
