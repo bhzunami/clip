@@ -10,17 +10,18 @@ from election_heuer import ElectionHeuer
 
 #logging.basicConfig(level=logging.INFO)
 
-def generate_votes(row=10, col=10, multiplier=2):
+def generate_votes(row=10, col=10, multiplier=3):
     votes = {}
     sum_demo = 0
     sum_repu = 0
+    random.seed(0)
     for x in range(row):
         for y in range(col):
             democrats = random.randint(0, 500)
-            if random.randint(0, 1) > 0:
-                republicans = random.randint(0, 500) * multiplier
-            else:
-                republicans = random.randint(0, 500)
+            #if random.randint(0, 1) > 0:
+            republicans = random.randint(0, 500) * 2
+            #else:
+            #    republicans = random.randint(0, 500)
             sum_demo += democrats
             sum_repu += republicans
             votes[x, y] = {'d': democrats, 'r': republicans}
@@ -91,10 +92,17 @@ def solve(row=10, col=10, constituency=10):
     # 1 neue model.addVar(vtype="B", name="demo_win_w0")
     # Diese Variable wird gesetzt: Diese Var ist 1 wen w0_d grösser ist als w0_r und ansonsten 0
     for w in range(constituency):
-        model.addCons(wd[w] - wr[w] <= 1000 * winner[w])
-        model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
+        #wd(w)+100000*(1-winner(w)) >= wr(w)
+        #wd(w)-100000*winner(w) <= wr(w)
 
-    model.addCons(quicksum(winner[w] for w in range(constituency)) >= 6)
+        model.addCons(wd[w] + 10000 * (1 - winner[w]) >= wr[w])
+        model.addCons(wd[w] - 10000 * winner[w] <= wr[w])
+
+
+        #model.addCons(wd[w] - wr[w] <= 10000 * winner[w])
+        #model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
+
+    # model.addCons(quicksum(winner[w] for w in range(constituency)) >= 6)
 
     # conshdlr = ElectionHdlr(s, logger=logger)
     # model.setBoolParam("misc/allowdualreds", False)
@@ -102,7 +110,7 @@ def solve(row=10, col=10, constituency=10):
     #                      "Election", chckpriority=-10,
     #                      needscons=False)
 
-    model.setObjective(quicksum(winner[w] for i in range(10)), "maximize")
+    model.setObjective(quicksum(winner[w] for w in range(10)), "maximize")
 
     model.hideOutput()
     model.optimize()

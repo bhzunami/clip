@@ -96,8 +96,8 @@ class ElectionHdlr(Conshdlr):
             {"result": SCIP_RESULT.FEASIBLE}
         else:
             # Add cons to avoid using at this position [x,y,w] != 1
-            self.model.addCons(var[sol['x'], sol['y'], sol['w']] == 0)
-            return {"result": SCIP_RESULT.CONSADDED}
+            # self.model.addCons(var[sol['x'], sol['y'], sol['w']] == 0)
+            return {"result": SCIP_RESULT.CUTOFF}
 
     def conslock(self, constraint, nlockspos, nlocksneg):
         pass
