@@ -4,27 +4,25 @@ import logging
 import time
 import pdb
 import random
+import math
 from pyscipopt import Model, quicksum, Conshdlr, SCIP_RESULT, SCIP_PARAMSETTING, SCIP_HEURTIMING
 from electionHandler import ElectionHdlr
 from election_heuer import ElectionHeuer
 
 #logging.basicConfig(level=logging.INFO)
 
-def generate_votes(row=10, col=10, multiplier=3):
+def generate_votes(row=10, col=10, multiplier=2):
     votes = {}
     sum_demo = 0
     sum_repu = 0
-    random.seed(0)
+    random.seed(5)
     for x in range(row):
         for y in range(col):
-            democrats = random.randint(0, 500)
-            #if random.randint(0, 1) > 0:
-            republicans = random.randint(0, 500) * 2
-            #else:
-            #    republicans = random.randint(0, 500)
+            democrats = random.randint(100, 5000)
+            republicans = random.randint(100, 5000) * multiplier
             sum_demo += democrats
             sum_repu += republicans
-            votes[x, y] = {'d': democrats, 'r': republicans}
+            votes[x, y] = {'d': math.floor(democrats*0.01), 'r': math.floor(republicans*0.01)}
     print("Democrats total: {} votes, Republicans total: {} votes".format(sum_demo, sum_repu))
     return votes
 
@@ -37,7 +35,12 @@ def solve(row=10, col=10, constituency=10):
     winner = {}  # Gewinner Wahlbezirk
     votes = generate_votes(row, col, multiplier=1)
 
-    #pdb.set_trace()
+    # Display Votes
+    for x in range(row):
+        out = ''
+        for y in range(col):
+            out += "{:2}/{:2} | ".format(votes[x, y]['d'], votes[x, y]['r'])
+        print(out)
 
     heuristic = ElectionHeuer(s, logger=logger)
     # includeHeur(heur, name, desc, dispatcher, priority, freq)
@@ -76,7 +79,7 @@ def solve(row=10, col=10, constituency=10):
 
     # Es gibt eine neue Variable für jedes Wd[0...9] für demokraten und wr[0...9] für Republikaner
     # In diesem W summieren wir die Werte der Stimmen auf. Somit haben wir
-    # ein wd_0, wd_1, wd_2 mit allen stimmen für diesen wahlbezirk
+    # ein wd_0, wd_1, wd_2 mit allen Stimmen für diesen Wahlbezirk
     # Stimme im W0_d = quicksum(s[x, y, 0] * v[0]{d}  for x in range(col) for y in range(row)
     for w in range(constituency):
         model.addCons(wd[w] == quicksum(s[x, y, w] * votes[x, y]['d']  for x in range(col) for y in range(row)))
@@ -91,26 +94,28 @@ def solve(row=10, col=10, constituency=10):
     # Diese Variabelen müssen maximiert werden.
     # 1 neue model.addVar(vtype="B", name="demo_win_w0")
     # Diese Variable wird gesetzt: Diese Var ist 1 wen w0_d grösser ist als w0_r und ansonsten 0
+    bimM = 20 * constituency * 2
     for w in range(constituency):
-        #wd(w)+100000*(1-winner(w)) >= wr(w)
-        #wd(w)-100000*winner(w) <= wr(w)
+        model.addCons(wd[w] - wr[w] <= 10000 * winner[w])
+        model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
+        #model.addCons(wd[w] + 10000 * (1 - winner[w]) >= wr[w])
+        #model.addCons(wd[w] - 10000 * winner[w] <= wr[w])
 
-        model.addCons(wd[w] + 10000 * (1 - winner[w]) >= wr[w])
-        model.addCons(wd[w] - 10000 * winner[w] <= wr[w])
-
-
-        #model.addCons(wd[w] - wr[w] <= 10000 * winner[w])
-        #model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
+        if w > 0:
+            model.addCons(wd[w-1] >= wd[w])
+            model.addCons(wr[w-1] <= wr[w])
+        # wd[w] < wd[w-1] symetrie breaking constraings
 
     # model.addCons(quicksum(winner[w] for w in range(constituency)) >= 6)
 
-    # conshdlr = ElectionHdlr(s, logger=logger)
-    # model.setBoolParam("misc/allowdualreds", False)
-    # model.includeConshdlr(conshdlr, "election",
-    #                      "Election", chckpriority=-10,
-    #                      needscons=False)
+    conshdlr = ElectionHdlr(s, row=row, col=col, cons=constituency, logger=logger)
+    model.includeConshdlr(conshdlr, "election",
+                          "Election", chckpriority=-100,
+                          needscons=False)
+    model.setBoolParam("misc/allowdualreds", False)
 
-    model.setObjective(quicksum(winner[w] for w in range(10)), "maximize")
+
+    model.setObjective(quicksum(winner[w] for w in range(constituency)), "maximize")
 
     model.hideOutput()
     model.optimize()
@@ -121,16 +126,9 @@ def solve(row=10, col=10, constituency=10):
 
     print("Solution found")
     solution = {}
-    ww = {1: {'d': 0, 'r': 0},
-          2: {'d': 0, 'r': 0},
-          3: {'d': 0, 'r': 0},
-          4: {'d': 0, 'r': 0},
-          5: {'d': 0, 'r': 0},
-          6: {'d': 0, 'r': 0},
-          7: {'d': 0, 'r': 0},
-          8: {'d': 0, 'r': 0},
-          9: {'d': 0, 'r': 0},
-          10: {'d': 0, 'r': 0}}
+    ww = {}
+    for w in range(constituency):
+        ww[w+1] = {'d': 0, 'r': 0}
 
     for x in range(row):
         out = ''
@@ -157,7 +155,8 @@ def solve(row=10, col=10, constituency=10):
     #     print(out)
 
 def main():
-    solve()
+    count = 7
+    solve(row=count, col=count, constituency=count)
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)

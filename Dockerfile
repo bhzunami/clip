@@ -21,3 +21,6 @@ WORKDIR /root/
 RUN git clone https://github.com/SCIP-Interfaces/PySCIPOpt.git
 WORKDIR /root/PySCIPOpt/
 RUN env SCIPOPTDIR=/root/scipoptsuite-4.0.0 python3 setup.py install
+
+# Install Pip3 packages
+RUN pip3 install psutil memory_profiler line_profiler objgraph numpy scipy
