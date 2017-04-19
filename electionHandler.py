@@ -29,6 +29,12 @@ class ElectionHdlr(Conshdlr):
         constraint.data.nvars = nvars
         constraint.data.myothername = othername
 
+    def checkValue(self, val, x, y):
+        try:
+            val[x][y]
+            return True
+        except IndexError:
+            return False
 
     def deepSearch(self, solution, pos_x, pos_y):
         """From the given start point check all direction (star formation),
@@ -36,85 +42,95 @@ class ElectionHdlr(Conshdlr):
          If yes add this next point to our list
         """
         fields = [{'x': pos_x, 'y': pos_y}]
-        value = solution[pos_x, pos_y]['value']
+        value = solution[pos_x][pos_y]
         while len(fields) > 0:
             field = fields.pop(0)
             x = field['x']
             y = field['y']
 
-            solution[x, y]['visited'] = True
+            solution[x][y] = -1
 
             # Check right:
             if y < self.col and \
-               solution.get((x, y+1), None) and \
-               not solution[x, y+1]['visited'] and \
-               solution[x, y+1]['value'] == value:
+               self.checkValue(solution, x, y+1) and \
+               solution[x][y+1] != -1 and \
+               solution[x][y+1] == value:
                 fields.append({'x': x, 'y': y+1})
 
             # check left
             if y > 0 and \
-               solution.get((x, y-1), None) and \
-               not solution[x, y-1]['visited'] \
-               and solution[x, y-1]['value'] == value:
+               self.checkValue(solution, x, y-1) and \
+               solution[x][y-1] != -1 and \
+               solution[x][y-1] == value:
                 fields.append({'x': x, 'y': y-1})
 
             # Check down
             if x < self.row and \
-               solution.get((x+1, y), None) and \
-               not solution[x+1, y]['visited'] and \
-               solution[x+1, y]['value'] == value:
+               self.checkValue(solution, x+1, y) and \
+               solution[x+1][y] != -1 and \
+               solution[x+1][y] == value:
                 fields.append({'x': x+1, 'y': y})
 
             # Check up
             if x > 0 and \
-               solution.get((x-1, y), None) and \
-               not solution[x-1, y]['visited'] and \
-               solution[x-1, y]['value'] == value:
+               self.checkValue(solution, x-1, y) and \
+               solution[x-1][y] != -1 and \
+               solution[x-1][y]== value:
                 fields.append({'x': x-1, 'y': y})
 
             # Check vertical right down
             if x < self.row and \
                y < self.col and \
-               solution.get((x+1, y+1), None) and \
-               not solution[x+1, y+1]['visited'] and \
-               solution[x+1, y+1]['value'] == value:
+               self.checkValue(solution, x+1, y+1) and \
+               solution[x+1][y+1] != -1 and \
+               solution[x+1][y+1] == value:
                 fields.append({'x': x+1, 'y': y+1})
 
             # Check vertical right up
             if x > 0 and \
                y < self.col and \
-               solution.get((x-1, y+1), None) and \
-               not solution[x-1, y+1]['visited'] and \
-               solution[x-1, y+1]['value'] == value:
+               self.checkValue(solution, x-1, y+1) and \
+               solution[x-1][y+1] != -1 and \
+               solution[x-1][y+1] == value:
                 fields.append({'x': x-1, 'y': y+1})
 
             # Check vertical left up
             if x > 0 and y > 0 and \
-               solution.get((x-1, y-1), None) and \
-               not solution[x-1, y-1]['visited'] and \
-               solution[x-1, y-1]['value'] == value:
+               self.checkValue(solution, x-1, y-1) and \
+               solution[x-1][y-1] != -1 and \
+               solution[x-1][y-1] == value:
                 fields.append({'x': x-1, 'y': y-1})
 
             # Check vertical left down
             if x < self.row and \
                y > 0 and \
-               solution.get((x+1, y-1), None) and \
-               not solution[x+1, y-1]['visited'] and \
-               solution[x+1, y-1]['value'] == value:
+               self.checkValue(solution, x+1, y-1) and \
+               solution[x+1][y-1] != -1 and \
+               solution[x+1][y-1] == value:
                 fields.append({'x': x+1, 'y': y-1})
+
+            pdb.set_trace()
 
     def checkNeighbour(self, sol=None):
         """Check if the constituency are all aside
         """
-        solution = {}
+        solution = []
         #self.count_check_neighbour += 1
         #print("Check neigh: {}".format(self.count_check_neighbour%100))
         var = self.variables
         for x in range(self.row):
+            row = []
             for y in range(self.col):
+                added = False
                 for w in range(self.constituency):
-                    if self.model.getSolVal(sol, var[x, y, w]) > EPS:
-                        solution[x, y] = {'visited': False, 'value': w}
+                    if self.model.getSolVal(sol, var[x, y, w]) > 0.8:
+                        if added:
+                            pdb.set_trace()
+                            print("SECONDE VALUE!!!")
+                        row.append(w)
+                        added = True
+
+            solution.append(row)
 
         if not solution:
             return {'solution': False}
@@ -124,21 +140,25 @@ class ElectionHdlr(Conshdlr):
             for y in range(self.col):
 
                 # Check if this value already is visited
-                if not solution.get((x, y), None):
+                try:
+                    solution[x][y]
+                except IndexError:
                     continue
-                if solution[x, y]['visited']:
+                
+                if solution[x][y] == -1:  # Visited
                     continue
                 # Check if this constituency is in our list
 
-                if solution[x, y]['value'] in visited_constituency:
-                    return {'solution': False, 'x': x, 'y': y, 'w': solution[x, y]['value']}
+                if solution[x][y] in visited_constituency:
+                    return {'solution': False, 'x': x, 'y': y, 'w': solution[x][y]}
                 # Set visited flag for
-                visited_constituency.add(solution[x, y]['value'])
+                visited_constituency.add(solution[x][y])
                 self.logger.info("Deep search from x: {}, y: {} for element {}".format(x,
                                                                                        y,
-                                                                                       solution[x, y]['value']))
+                                                                                       solution[x][y]))
 
                 with timer.Timer() as t:
+                    print("DEEPSEARCH FOR {}".format(solution[x][y]))
                     self.deepSearch(solution, x, y)
                 self.time_deepsearch.append(t.msecs)
 
@@ -152,13 +172,7 @@ class ElectionHdlr(Conshdlr):
                   checklprows, printreason, completely):
         self.logger.info("Check one solution")
         self.logger.info("-"*20)
-        #with timer.Timer() as t:
         sol = self.checkNeighbour(solution)
-        #self.time_check_neighbour.append(t.msecs)
-
-        if len(self.time_check_neighbour) == 100:
-            print("Avg check neighbour time: {}".format(np.mean(self.time_check_neighbour)))
-            self.time_check_neighbour = []
 
         if sol['solution']:
             self.logger.info("Solution seems OK")
