@@ -7,6 +7,7 @@ import pdb
 import logging
 import numpy as np
 import timer
+from types import SimpleNamespace
 
 EPS = 1.e-6
 class ElectionHdlr(Conshdlr):
@@ -20,6 +21,13 @@ class ElectionHdlr(Conshdlr):
         self.time_deepsearch = []
         self.time_check_neighbour = []
         self.count_check_neighbour = 0
+
+
+    def createData(self, constraint, nvars, othername):
+        print("Creating data for my constraint: %s"%constraint.name)
+        constraint.data = SimpleNamespace()
+        constraint.data.nvars = nvars
+        constraint.data.myothername = othername
 
 
     def deepSearch(self, solution, pos_x, pos_y):
@@ -111,7 +119,7 @@ class ElectionHdlr(Conshdlr):
         if not solution:
             return {'solution': False}
 
-        visited_constituency = [] # set()
+        visited_constituency = set()
         for x in range(self.row):
             for y in range(self.col):
 
@@ -121,17 +129,11 @@ class ElectionHdlr(Conshdlr):
                 if solution[x, y]['visited']:
                     continue
                 # Check if this constituency is in our list
-                
-                if solution[x, y]['value'] in visited_constituency:
-                    try:
-                        if len([i for i, x in enumerate(visited_constituency) if x == solution[x, y]['value']]) > 2:
-                            self.logger.info("Value: {} was in set".format(solution[x, y]['value']))
-                            return {'solution': False, 'x': x, 'y': y, 'w': solution[x, y]['value']}
-                    except Exception:
-                        return {'solution': False, 'x': x, 'y': y, 'w': solution[x, y]['value']}
 
+                if solution[x, y]['value'] in visited_constituency:
+                    return {'solution': False, 'x': x, 'y': y, 'w': solution[x, y]['value']}
                 # Set visited flag for
-                visited_constituency.append(solution[x, y]['value'])
+                visited_constituency.add(solution[x, y]['value'])
                 self.logger.info("Deep search from x: {}, y: {} for element {}".format(x,
                                                                                        y,
                                                                                        solution[x, y]['value']))
@@ -150,9 +152,9 @@ class ElectionHdlr(Conshdlr):
                   checklprows, printreason, completely):
         self.logger.info("Check one solution")
         self.logger.info("-"*20)
-        with timer.Timer() as t:
-            sol = self.checkNeighbour(solution)
-        self.time_check_neighbour.append(t.msecs)
+        #with timer.Timer() as t:
+        sol = self.checkNeighbour(solution)
+        #self.time_check_neighbour.append(t.msecs)
 
         if len(self.time_check_neighbour) == 100:
             print("Avg check neighbour time: {}".format(np.mean(self.time_check_neighbour)))
@@ -167,57 +169,58 @@ class ElectionHdlr(Conshdlr):
 
 
     def consenfolp(self, constraints, n_useful_conss, sol_infeasible):
-        self.logger.info("Check CONSENS")
-        self.logger.info("="*20)
-        with timer.Timer() as t:
-            sol = self.checkNeighbour()
-        self.time_check_neighbour.append(t.msecs)
-
-        if len(self.time_check_neighbour) == 100:
-            print("Avg check neighbour time: {}".format(np.mean(self.time_check_neighbour)))
-            self.time_check_neighbour = []
-
+        sol = self.checkNeighbour()
         if sol['solution']:
-            {"result": SCIP_RESULT.FEASIBLE}
-        else:
-            # Add cons to avoid using at this position [x,y,w] != 1
-            # self.model.addCons(var[sol['x'], sol['y'], sol['w']] == 0)
-            return {"result": SCIP_RESULT.CUTOFF}
+            return {"result": SCIP_RESULT.FEASIBLE}
+        
+        # Add cons to avoid using at this position [x,y,w] != 1
+        # self.model.addCons(var[sol['x'], sol['y'], sol['w']] == 0)
+        return {"result": SCIP_RESULT.CUTOFF}
+        #return {"result": SCIP_RESULT.INFEASIBLE}
 
     def conslock(self, constraint, nlockspos, nlocksneg):
         pass
-        # sol = {}
-        # var = self.variables
-        # for x in range(self.row):
-        #     out = ''
-        #     for y in range(self.col):
-        #         for w in range(self.constituency):
-        #             if self.model.getSolVal(None, var[x, y, w]) > EPS:
-        #                 sol[x, y] = w + 1
-        #         out += "{:2} | ".format(sol.get((x, y), "--"))
-        #     print(out)
+    #     pdb.set_trace()
+    #     #for var in constraint.data.vars:
+    #     #    self.model.addVarLocks(var, nlockspos + nlocksneg , nlockspos + nlocksneg)
+    #     return {}
 
-        #pdb.set_trace()
-
-        pass
+    # def constrans(self, constraint):
+    #     return {}
 
 
-    def conscopy(self):
-        print("COPY")
-        pass
+    # def conscopy(self):
+    #     print("COPY")
 
-    def consinitsol(self, constraints):
-        pass
+    #     pdb.set_trace()
+    #     return {}
+
+    # def consinitsol(self, constraints):
+    #     pdb.set_trace()
+    #     return {}
         
 
-    def consenfops(self, constraints, nusefulconss, solinfeasible, objinfeasible):
-        # The CONSENFOPS callback is similar to the CONSENFOLP callback, but deals with pseudo solutions instead of LP solutions. because numerical difficulties in the LP solving process were detected
-        pass
+    # def consenfops(self, constraints, nusefulconss, solinfeasible, objinfeasible):
+    #     # The CONSENFOPS callback is similar to the CONSENFOLP callback, but deals with pseudo solutions instead of LP solutions. because numerical difficulties in the LP solving process were detected
+    #     pass
+    #     pdb.set_trace()
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
         print("consprop")
         pdb.set_trace()
+        sol = self.checkNeighbour()
+        if sol['solution']:
+            return {"result": SCIP_RESULT.FEASIBLE}
+
+        return {"result": SCIP_RESULT.DIDNOTRUN}
 
     def consresprop(self):
         print("consresprop")
         pdb.set_trace()
+
+
+    # def conspresol(self, constraints, nrounds, presoltiming,
+    #                nnewfixedvars, nnewaggrvars, nnewchgvartypes, nnewchgbds, nnewholes,
+    #                nnewdelconss, nnewaddconss, nnewupgdconss, nnewchgcoefs, nnewchgsides, result_dict):
+    #     pdb.set_trace()
+    #     return result_dict

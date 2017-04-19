@@ -11,18 +11,18 @@ from election_heuer import ElectionHeuer
 
 #logging.basicConfig(level=logging.INFO)
 
-def generate_votes(row=10, col=10, multiplier=2):
+def generate_votes(row=10, col=10, multiplier=3):
     votes = {}
     sum_demo = 0
     sum_repu = 0
-    random.seed(5)
+    random.seed(0)
     for x in range(row):
         for y in range(col):
             democrats = random.randint(100, 5000)
             republicans = random.randint(100, 5000) * multiplier
             sum_demo += democrats
             sum_repu += republicans
-            votes[x, y] = {'d': math.floor(democrats*0.01), 'r': math.floor(republicans*0.01)}
+            votes[x, y] = {'d': democrats*0.01, 'r': republicans*0.01}
     print("Democrats total: {} votes, Republicans total: {} votes".format(sum_demo, sum_repu))
     return votes
 
@@ -51,10 +51,10 @@ def solve(row=10, col=10, constituency=10):
     # Gewinner variabeln für die 10 Wahlbezirke
     for i in range(constituency):
         # Anzahl Stimmen von Demokraten in diesem Wahlbezirk
-        wd[i] = model.addVar(vtype="I", name="wd{}".format(i))
+        wd[i] = model.addVar(vtype="C", name="wd{}".format(i))
 
         # Anzahl Stimmen von Republikaner in diesem Wahlbezirk
-        wr[i] = model.addVar(vtype="I", name="wr{}".format(i))
+        wr[i] = model.addVar(vtype="C", name="wr{}".format(i))
 
         # 1 wenn Demokraten gewinnen, 0 wenn Republikaner gewinnen
         winner[i] = model.addVar(vtype="B", name="winner{}".format(i))
@@ -103,16 +103,20 @@ def solve(row=10, col=10, constituency=10):
 
         if w > 0:
             model.addCons(wd[w-1] >= wd[w])
-            model.addCons(wr[w-1] <= wr[w])
+            # model.addCons(wr[w-1] <= wr[w])
         # wd[w] < wd[w-1] symetrie breaking constraings
 
     # model.addCons(quicksum(winner[w] for w in range(constituency)) >= 6)
 
     conshdlr = ElectionHdlr(s, row=row, col=col, cons=constituency, logger=logger)
     model.includeConshdlr(conshdlr, "election",
-                          "Election", chckpriority=-100,
-                          needscons=False)
+                          "Election", chckpriority=-10000,
+                          needscons=False)  # propfreq=10
     model.setBoolParam("misc/allowdualreds", False)
+
+    #cons1 = model.createCons(conshdlr, "election")
+    #conshdlr.createData(cons1, 10, "cons1_anothername")
+    #model.addPyCons(cons1)
 
 
     model.setObjective(quicksum(winner[w] for w in range(constituency)), "maximize")
@@ -145,6 +149,8 @@ def solve(row=10, col=10, constituency=10):
     for w in ww.keys():
         winner = 'D' if ww[w]['d'] >= ww[w]['r'] else 'R'
         print('{:2}: {} (Demo: {}, Repu: {})'.format(w, winner, ww[w]['d'], ww[w]['r']))
+
+    del model # consfree get called
     return True
 
 
@@ -155,7 +161,7 @@ def solve(row=10, col=10, constituency=10):
     #     print(out)
 
 def main():
-    count = 7
+    count = 4
     solve(row=count, col=count, constituency=count)
 
 if __name__ == "__main__":
