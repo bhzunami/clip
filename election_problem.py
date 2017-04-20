@@ -15,7 +15,7 @@ def generate_votes(row=10, col=10, multiplier=3):
     votes = {}
     sum_demo = 0
     sum_repu = 0
-    random.seed(1)
+    random.seed(0)
     for x in range(row):
         for y in range(col):
             democrats = random.randint(100, 5000)
@@ -111,7 +111,7 @@ def solve(row=10, col=10, constituency=10):
     conshdlr = ElectionHdlr(s, row=row, col=col, cons=constituency, logger=logger)
     model.includeConshdlr(conshdlr, "election",
                           "Election", chckpriority=-10000,
-                          needscons=False)  # propfreq=10
+                          needscons=False, propfreq=50)  # 
     model.setBoolParam("misc/allowdualreds", False)
 
     #cons1 = model.createCons(conshdlr, "election")
@@ -161,7 +161,7 @@ def solve(row=10, col=10, constituency=10):
     #     print(out)
 
 def main():
-    count = 6
+    count = 4
     solve(row=count, col=count, constituency=count)
 
 if __name__ == "__main__":

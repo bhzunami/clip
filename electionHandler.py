@@ -2,7 +2,7 @@
 #
 # CONSRESPROP
 
-from pyscipopt import Model, Conshdlr, SCIP_RESULT
+from pyscipopt import Model, Conshdlr, SCIP_RESULT, quicksum
 import pdb
 import logging
 import numpy as np
@@ -21,6 +21,7 @@ class ElectionHdlr(Conshdlr):
         self.time_deepsearch = []
         self.time_check_neighbour = []
         self.count_check_neighbour = 0
+        self.checked = False
 
 
     def createData(self, constraint, nvars, othername):
@@ -109,7 +110,6 @@ class ElectionHdlr(Conshdlr):
                solution[x+1][y-1] == value:
                 fields.append({'x': x+1, 'y': y-1})
 
-            pdb.set_trace()
 
     def checkNeighbour(self, sol=None):
         """Check if the constituency are all aside
@@ -121,25 +121,23 @@ class ElectionHdlr(Conshdlr):
         for x in range(self.row):
             row = []
             for y in range(self.col):
-                added = False
                 for w in range(self.constituency):
-                    if self.model.getSolVal(sol, var[x, y, w]) > 0.8:
-                        if added:
-                            pdb.set_trace()
-                            print("SECONDE VALUE!!!")
+                    if self.model.getSolVal(sol, var[x, y, w]) > EPS:
                         row.append(w)
-                        added = True
+
+            if len(row) != self.col:
+                return {'solution': False}
 
             solution.append(row)
+        
 
-        if not solution:
+        if not solution[0]:
             return {'solution': False}
 
         visited_constituency = set()
         for x in range(self.row):
             for y in range(self.col):
 
-                # Check if this value already is visited
                 try:
                     solution[x][y]
                 except IndexError:
@@ -158,7 +156,7 @@ class ElectionHdlr(Conshdlr):
                                                                                        solution[x][y]))
 
                 with timer.Timer() as t:
-                    print("DEEPSEARCH FOR {}".format(solution[x][y]))
+                    # print("DEEPSEARCH FOR {}".format(solution[x][y]))
                     self.deepSearch(solution, x, y)
                 self.time_deepsearch.append(t.msecs)
 
@@ -170,10 +168,8 @@ class ElectionHdlr(Conshdlr):
 
     def conscheck(self, constraints, solution, checkintegrality,
                   checklprows, printreason, completely):
-        self.logger.info("Check one solution")
         self.logger.info("-"*20)
         sol = self.checkNeighbour(solution)
-
         if sol['solution']:
             self.logger.info("Solution seems OK")
             return {"result": SCIP_RESULT.FEASIBLE}
@@ -183,14 +179,44 @@ class ElectionHdlr(Conshdlr):
 
 
     def consenfolp(self, constraints, n_useful_conss, sol_infeasible):
+        pdb.set_trace()
         sol = self.checkNeighbour()
         if sol['solution']:
             return {"result": SCIP_RESULT.FEASIBLE}
         
         # Add cons to avoid using at this position [x,y,w] != 1
         # self.model.addCons(var[sol['x'], sol['y'], sol['w']] == 0)
+        #self.addConstraint()
+        #return {"result": SCIP_RESULT.CONSADDED}
         return {"result": SCIP_RESULT.CUTOFF}
         #return {"result": SCIP_RESULT.INFEASIBLE}
+
+
+    def addConstraint(self):
+        var = self.variables
+        for x in range(1, self.col-1):
+            for y in range(1, self.row-1):
+                constraints = []
+                # Get the index where w = 1
+                w = [i for i, j in enumerate(self.model.getSolVal(None, var[x, y, w]) for w in range(self.constituency)) if j > EPS][0]
+                # Left
+                constraints.append(var[x, y+1, w])
+                # right
+                constraints.append(var[x, y-1, w])
+                # up
+                constraints.append(var[x-1, y, w])
+                #down
+                constraints.append(var[x+1, y+1, w])
+                #left up
+                constraints.append(var[x-1, y+1, w])
+                # left down
+                constraints.append(var[x+1, y+1, w])
+                # right up
+                constraints.append(var[x-1, y-1, w])
+                # right down
+                constraints.append(var[x+1, y+1, w])
+                self.model.addCons(quicksum(constraints) >= 2)
+
 
     def conslock(self, constraint, nlockspos, nlocksneg):
         pass
@@ -220,18 +246,8 @@ class ElectionHdlr(Conshdlr):
     #     pdb.set_trace()
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
-        print("consprop")
         pdb.set_trace()
-        sol = self.checkNeighbour()
-        if sol['solution']:
-            return {"result": SCIP_RESULT.FEASIBLE}
-
-        return {"result": SCIP_RESULT.DIDNOTRUN}
-
-    def consresprop(self):
-        print("consresprop")
-        pdb.set_trace()
-
+        return {"result": SCIP_RESULT.DIDNOTFIND}
 
     # def conspresol(self, constraints, nrounds, presoltiming,
     #                nnewfixedvars, nnewaggrvars, nnewchgvartypes, nnewchgbds, nnewholes,

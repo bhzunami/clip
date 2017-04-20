@@ -1,7 +1,7 @@
 FROM ubuntu
 MAINTAINER N. Mauchle <me@nicolasmauchle.ch>
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y build-essential libgmp3-dev zlib1g-dev  libreadline-dev python3 cython3 libncurses5-dev git python3-setuptools wget python3-pip
+RUN apt-get update && apt-get upgrade -y && apt-get install -y build-essential libgmp3-dev zlib1g-dev  libreadline-dev python3 cython3 libncurses5-dev git python3-setuptools wget python3-pip python3-tk
 
 # For version 3.2.1
 #ADD scipoptsuite-3.2.1.tgz /root
@@ -23,4 +23,4 @@ WORKDIR /root/PySCIPOpt/
 RUN env SCIPOPTDIR=/root/scipoptsuite-4.0.0 python3 setup.py install
 
 # Install Pip3 packages
-RUN pip3 install psutil memory_profiler line_profiler objgraph numpy scipy
+RUN pip3 install psutil memory_profiler line_profiler objgraph numpy scipy pytest networkx matplotlib
