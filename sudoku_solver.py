@@ -14,7 +14,7 @@ sudoku = [2, 0, 1, 5, 0, 0, 0, 0, 7,
           0, 0, 2, 1, 0, 0, 0, 9, 5,
           9, 0, 0, 0, 0, 4, 7, 0, 1]
 
-sudoku = [0, 0, 0, 0, 0, 0, 0, 0, 0,
+sudoku2 = [0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -79,7 +79,7 @@ for row in range(3):
         # print("Elements: {}".format(el))
         model.addCons(quicksum(el) == 1)
 
-model.hideOutput()
+#model.hideOutput()
 model.optimize()
 
 if model.getStatus() != 'optimal':

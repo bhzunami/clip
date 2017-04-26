@@ -161,7 +161,7 @@ class ElectionHdlr(Conshdlr):
                 self.time_deepsearch.append(t.msecs)
 
                 if len(self.time_deepsearch) == 100:
-                    print("Avg deep search time: {}".format(np.mean(self.time_deepsearch)))
+                    #print("Avg deep search time: {}".format(np.mean(self.time_deepsearch)))
                     self.time_deepsearch = []
 
         return {'solution': True}
@@ -179,7 +179,7 @@ class ElectionHdlr(Conshdlr):
 
 
     def consenfolp(self, constraints, n_useful_conss, sol_infeasible):
-        pdb.set_trace()
+        # pdb.set_trace()
         sol = self.checkNeighbour()
         if sol['solution']:
             return {"result": SCIP_RESULT.FEASIBLE}
@@ -246,7 +246,7 @@ class ElectionHdlr(Conshdlr):
     #     pdb.set_trace()
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
-        pdb.set_trace()
+        #pdb.set_trace()
         return {"result": SCIP_RESULT.DIDNOTFIND}
 
     # def conspresol(self, constraints, nrounds, presoltiming,

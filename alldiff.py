@@ -16,6 +16,17 @@ init = [5, 3, 0, 0, 7, 0, 0, 0, 0,
         0, 0, 0, 4, 1, 9, 0, 0, 5,
         0, 0, 0, 0, 8, 0, 0, 7, 9]
 
+init2 = [0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
 def plot_graph(G):
     X,Y=bipartite.sets(G)
     pos = dict()
@@ -130,7 +141,7 @@ class ALLDIFFconshdlr(Conshdlr):
                     domains[var.ptr()].remove(val) # this asserts if value is not there and we shouldn't delete two times the same value
 
         # "fix" variable when possible
-        pdb.set_trace()
+        #pdb.set_trace()
         for var in vars:
             #print("domain of var ", var.name, "is ", domains[var])
             minval = min(domains[var.ptr()])

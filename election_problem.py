@@ -121,7 +121,7 @@ def solve(row=10, col=10, constituency=10):
 
     model.setObjective(quicksum(winner[w] for w in range(constituency)), "maximize")
 
-    model.hideOutput()
+    #model.hideOutput()
     model.optimize()
 
     if model.getStatus() != 'optimal':
