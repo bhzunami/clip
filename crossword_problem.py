@@ -17,9 +17,18 @@ import string
     I D L E
     N O S E
     S L E D
+
+    A B
+    A B
+
+    C A N
+    A G E
+    R O W
 """
 
 DICTIONARY = ['PIER', 'IDLE', 'NOSE', 'SLED', 'PINS', 'IDOL', 'ELSE', 'REED']
+DICTIONARY = ['AB', 'AB', 'AA', 'BB']
+DICTIONARY = ['CAN', 'AGE', 'ROW', 'CAR', 'AGO', 'NEW']
 
 def getWords():
     num_words = []
@@ -51,7 +60,7 @@ def solve(row=10, col=10):
                 s[x, y, l] = model.addVar(vtype="B", name="{}-{}-{}".format(x, y, l))
             #s[x, y] = model.addVar(vtype="I", lb=lb_global, ub=ub_global, name="{}-{}".format(x, y))
 
-    pdb.set_trace()    
+    #pdb.set_trace()    
     # Nur 1 Buchstaben pro Feld
     for x in range(row):
         for y in range(col):
@@ -60,6 +69,10 @@ def solve(row=10, col=10):
     # Jeder Buchstaben muss mind 1 vorhanden ist
     for l in words_count.keys():
         model.addCons(quicksum(s[x, y, l]  for x in range(col) for y in range(row)) >= 1)
+
+    # Buchstabe x darf nicht mehr vorkommen als gezählt
+    for i, c in words_count.items():
+        model.addCons(quicksum(s[x, y, i]  for x in range(col) for y in range(row)) <= c)
     
     # CONSTRAINTS
     # - - - - - - - - - - - - - - - - - -
@@ -68,45 +81,28 @@ def solve(row=10, col=10):
     #     for y in range(col):
     #         model.addCons(s[x, y, l] for l in range(26)) == 1)  # Nur ein Buchstaben
 
-    # conshdlr = CrosswordsHdlr(s, row=row, col=col, logger=logger)
+    conshdlr = CrosswordsHdlr(DICTIONARY, s, lb_global, ub_global, row=row, col=col, logger=logger)
 
-    # model.includeConshdlr(conshdlr, "crossword",
-    #                       "Crossword", chckpriority=-10000,
-    #                       needscons=False, propfreq=50)  # 
-    # model.setBoolParam("misc/allowdualreds", False)
+    model.includeConshdlr(conshdlr, "crossword",
+                          "Crossword", chckpriority=-50,
+                          needscons=False, propfreq=15)  # 
+    model.setBoolParam("misc/allowdualreds", False)
 
     # Add horizontal 
     domains = {}
-    # for x in range(row):
-    #     vars = []
-    #     for y in range(col):
-    #         var = s[x, y]
-    #         vars.append(var)
-    #         vals = set(range(int(lb_global), int(round(ub_global))+1))
-    #         domains[var.ptr()] = vals
-
-        
-    #     cons = model.createCons(conshdlr, "horizontal_{}".format(x))
-    #     cons.data = SimpleNamespace() 
-    #     cons.data.vars = vars
-    #     cons.data.domains = domains
-    #     model.addPyCons(cons)
-
-    # # Add vertical
-    # for y in range(col):
-    #     vars = []
-    #     for x in range(row):
-    #         var = s[x, y]
-    #         vars.append(var)
-
-    #     cons = model.createCons(conshdlr, "vertical_{}".format(y))
-    #     cons.data = SimpleNamespace() 
-    #     cons.data.vars = vars
-    #     cons.data.domains = domains
-    #     model.addPyCons(cons)
-   
-    # cons = model.createCons(conshdlr, "crossword")
-    # model.addPyCons(cons)
+    vars = []
+    for x in range(row):
+        for y in range(col):
+            for l in range(lb_global, ub_global+1):
+                var = s[x, y, l]
+                vars.append(var)
+                vals = set(range(int(round(var.getLbLocal())), int(round(var.getUbLocal())) + 1))
+                domains[var.ptr()] = vals
+    cons = model.createCons(conshdlr, "crossword")
+    cons.data = SimpleNamespace() 
+    cons.data.vars = vars
+    cons.data.domains = domains
+    model.addPyCons(cons)
 
     #model.setEmphasis(SCIP_PARAMEMPHASIS.CPSOLVER)
     #model.setPresolve(SCIP_PARAMSETTING.OFF)
@@ -133,7 +129,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 4
+    count = 3
     solve(row=count, col=count)
 
 if __name__ == "__main__":
