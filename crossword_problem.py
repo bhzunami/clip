@@ -84,9 +84,9 @@ def solve(row=10, col=10):
     conshdlr = CrosswordsHdlr(DICTIONARY, s, lb_global, ub_global, row=row, col=col, logger=logger)
 
     model.includeConshdlr(conshdlr, "crossword",
-                          "Crossword", chckpriority=-50,
-                          needscons=False, propfreq=15)  # 
-    model.setBoolParam("misc/allowdualreds", False)
+                          "Crossword", chckpriority=-10,
+                          enfopriority = -10, propfreq=1)  # 
+    
 
     # Add horizontal 
     domains = {}
@@ -104,17 +104,19 @@ def solve(row=10, col=10):
     cons.data.domains = domains
     model.addPyCons(cons)
 
-    #model.setEmphasis(SCIP_PARAMEMPHASIS.CPSOLVER)
-    #model.setPresolve(SCIP_PARAMSETTING.OFF)
+    # http://scip.zib.de/doc/html/group__ParameterMethods.php#gab2bc4ccd8d9797f1e1b2d7aaefa6500e
+    #model.setEmphasis(SCIP_PARAMEMPHASIS.CPSOLVER) # No LP Relaxtion
+    model.setPresolve(SCIP_PARAMSETTING.OFF)  # Turn of presolver
+    model.setBoolParam("misc/allowdualreds", False)
     #model.hideOutput()
     model.optimize()
 
     if model.getStatus() != 'optimal':
-        print('No solution found!')
+        print('No solution found! {}'.format(model.getStatus()))
         return False
 
     print("Solution found")
-    
+
     for x in range(row):
         out = ''
         for y in range(col):
