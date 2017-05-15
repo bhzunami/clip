@@ -34,7 +34,7 @@ import string
     D E T E C T
 """
 
-DICTIONARY = ['PIER', 'IDLE', 'NOSE', 'SLED', 'PINS', 'IDOL', 'ELSE', 'REED']
+DICTIONARY = ['PIER', 'IDLE', 'NOSE', 'SLED', 'PINS', 'IDOL', 'ELSE', 'REED', 'KEEP', 'LOVE', 'RIDE', 'BIKE']
 DICTIONARY2 = ['AB', 'AB', 'AA', 'BB']
 DICTIONARY2 = ['CAN', 'AGE', 'ROW', 'CAR', 'AGO', 'NEW']
 DICTIONARY3 = ['MISLED', 'UMPIRE', 'SPIGOT', 'CURATE', 'IRITIC', 'DETECT', 'MUSCID', 'IMPURE', 'SPIRIT', 'LIGATE', 'EROTIC', 'DETECT']
@@ -77,8 +77,8 @@ def solve(row=10, col=10):
             model.addCons(quicksum(s[x, y, l] for l in range(lb_global, ub_global+1)) == 1)
 
     # Jeder Buchstaben muss mind 1 vorhanden ist
-    for l in words_count.keys():
-        model.addCons(quicksum(s[x, y, l]  for x in range(col) for y in range(row)) >= 1)
+    # for l in words_count.keys():
+    #     model.addCons(quicksum(s[x, y, l]  for x in range(col) for y in range(row)) >= 1)
 
     # Buchstabe x darf nicht mehr vorkommen als gezählt
     for i, c in words_count.items():
@@ -97,8 +97,8 @@ def solve(row=10, col=10):
     #heuristic = CrosswordHeuer(DICTIONARY, row, col, lb_global, ub_global, logger=logger)
     #                 heur,        name,       desc,         dispatcher, priority, freq)
     # HEUER
-    model.includeHeur(heuristic, "PyHeur", "custom heuristic implemented in python", "Y",
-                      timingmask=SCIP_HEURTIMING.BEFORENODE)
+    # model.includeHeur(heuristic, "PyHeur", "custom heuristic implemented in python", "Y",
+    #                   timingmask=SCIP_HEURTIMING.BEFORENODE)
 
     model.includeConshdlr(conshdlr, "crossword",
                           "Crossword", chckpriority=-10,

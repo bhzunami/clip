@@ -7,6 +7,7 @@ import pdb
 import logging
 import numpy as np
 import timer
+import time
 import string
 from types import SimpleNamespace
 
@@ -72,7 +73,7 @@ class CrosswordsHdlr(Conshdlr):
             return False
 
         #print("CHECK CROSS {}".format(cross))
-        self.print_cross(cross)
+        #self.print_cross(cross)
 
         builded_words = []
         # Check vertical words
@@ -127,33 +128,70 @@ class CrosswordsHdlr(Conshdlr):
         pass
 
 #==========================================
+    def get_possible_words(self, indexes, letters):
+        words = []
+        for word in self.dictionary:
+            words.append(word)
+            for i, index in enumerate(indexes):
+                if word[int(index)] != string.ascii_uppercase[int(letters[i])]:
+                    try:
+                        del words[words.index(word)]
+                    except ValueError:
+                        pass
+                    continue
+        return words
+
 
     def propagate_cons(self, cons):
-        fixed_variables = []
         reduce = False
-        #pdb.set_trace()
+        solution = np.zeros([self.row, self.col])
+        solution[solution == 0] = -1
 
         for var in cons.data.vars:
-            if var.getUbLocal() - var.getLbLocal() >= 0.5:  # If not set
-                x, y, l = var.name.split('-')
-                possible_letters_h = set([w[int(y)] for w in self.dictionary])
-                possible_letters_v = set([w[int(x)] for w in self.dictionary])
-                possible_letters = list(possible_letters_h - (possible_letters_h - possible_letters_v))
+            x, y, l = [int(v) for v in var.name.split('-')]
+            if var.getLbLocal() >= 0.5:
+                solution[x][y] = l
 
-                if len(possible_letters) == 1 and possible_letters[0] == string.ascii_uppercase[int(l)]:
-                    self.model.chgVarLb(var, 1.0)
-                    reduce = True
+        #print(solution)
+        for x in range(self.row):
+            for y in range(self.col):
+                if solution[x][y] <= 0:  # Letter not fix try to fix it
+                    #print("Found [{}] [{}] which is not set".format(x, y))
+                    # Get indexes where letter is set
+                    indexes = np.where(solution[x] > 0)[0]
+                    possible_words = []
+                    letters = []
+                    for index in indexes:
+                        letters.append(solution[x][index])
+                    possible_words.extend(self.get_possible_words(indexes, letters))
+                    #print("Possible horizontal words: {}".format(possible_words))
 
-                if string.ascii_uppercase[int(l)] not in possible_letters:
-                    self.model.chgVarUb(var, -0.0)
-                    reduce = True
+                    letters = []
+                    indexes = np.where(solution.T[x] > 0)[0]
+                    for index in indexes:
+                        letters.append(solution.T[x][index])
 
-        # for var in cons.data.vars:
-        #     print("{}, lb: {} ub: {}".format(var.name, var.getLbLocal(), var.getUbLocal()))
-        # pdb.set_trace()
+                    possible_words.extend(self.get_possible_words(indexes, letters))
+                    #print("Possible vertical words: {}".format(possible_words))
+
+                    if len(possible_words) == 0:
+                        print("Cut Node")
+                        return SCIP_RESULT.CUTOFF
+
+                    for var in [v for v in cons.data.vars if v.name.startswith("{}-{}".format(x, y))]:
+                        x2, y2, l2 = [int(v) for v in var.name.split('-')]
+                        # print("check possible words: {}".format(set([l[y] for l in possible_words])))
+                        if string.ascii_uppercase[l2] not in set([l[y] for l in possible_words]):
+                            # print("Var {} ({})is not in list".format(l2, string.ascii_uppercase[l2]))
+                            self.model.chgVarUb(var, -0.0)
+                            reduce = True
+
+                        if len(possible_words) == 1 and string.ascii_uppercase[l2] in set([l[y] for l in possible_words]):
+                            self.model.chgVarLb(var, 1.0)
+
         if reduce:
+            #print("REDUCE DOM")
             return SCIP_RESULT.REDUCEDDOM
-
         return SCIP_RESULT.DIDNOTFIND
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
