@@ -7,10 +7,11 @@ import random
 import math
 from pyscipopt import Model, quicksum, Conshdlr, SCIP_RESULT, SCIP_PARAMSETTING, SCIP_HEURTIMING, SCIP_PARAMEMPHASIS
 from crosswordsHandler import CrosswordsHdlr
+from crossword_heuer import CrosswordHeuerBrutetForce, CrosswordHeuer
+
 from types import SimpleNamespace
 import string
 #logging.basicConfig(level=logging.INFO)
-
 
 """
     P I E R
@@ -24,11 +25,19 @@ import string
     C A N
     A G E
     R O W
+
+    M I S L E D
+    U M P I R E
+    S P I G O T
+    C Z R A T E
+    I R I T I C
+    D E T E C T
 """
 
 DICTIONARY = ['PIER', 'IDLE', 'NOSE', 'SLED', 'PINS', 'IDOL', 'ELSE', 'REED']
-DICTIONARY = ['AB', 'AB', 'AA', 'BB']
-DICTIONARY = ['CAN', 'AGE', 'ROW', 'CAR', 'AGO', 'NEW']
+DICTIONARY2 = ['AB', 'AB', 'AA', 'BB']
+DICTIONARY2 = ['CAN', 'AGE', 'ROW', 'CAR', 'AGO', 'NEW']
+DICTIONARY3 = ['MISLED', 'UMPIRE', 'SPIGOT', 'CURATE', 'IRITIC', 'DETECT', 'MUSCID', 'IMPURE', 'SPIRIT', 'LIGATE', 'EROTIC', 'DETECT']
 
 def getWords():
     num_words = []
@@ -53,6 +62,7 @@ def solve(row=10, col=10):
 
     lb_global = min(words_count.keys())
     ub_global = max(words_count.keys())
+    print(lb_global, ub_global)
     # Variabeln für die einzelnen stimmen pro quadrat definieren
     for x in range(row):
         for y in range(col):
@@ -65,7 +75,7 @@ def solve(row=10, col=10):
     for x in range(row):
         for y in range(col):
             model.addCons(quicksum(s[x, y, l] for l in range(lb_global, ub_global+1)) == 1)
-    
+
     # Jeder Buchstaben muss mind 1 vorhanden ist
     for l in words_count.keys():
         model.addCons(quicksum(s[x, y, l]  for x in range(col) for y in range(row)) >= 1)
@@ -73,7 +83,7 @@ def solve(row=10, col=10):
     # Buchstabe x darf nicht mehr vorkommen als gezählt
     for i, c in words_count.items():
         model.addCons(quicksum(s[x, y, i]  for x in range(col) for y in range(row)) <= c)
-    
+
     # CONSTRAINTS
     # - - - - - - - - - - - - - - - - - -
 
@@ -81,32 +91,38 @@ def solve(row=10, col=10):
     #     for y in range(col):
     #         model.addCons(s[x, y, l] for l in range(26)) == 1)  # Nur ein Buchstaben
 
-    conshdlr = CrosswordsHdlr(DICTIONARY, s, lb_global, ub_global, row=row, col=col, logger=logger)
+    conshdlr = CrosswordsHdlr(DICTIONARY, lb_global, ub_global, row=row, col=col, logger=logger)
+    random.shuffle(DICTIONARY)
+    heuristic = CrosswordHeuerBrutetForce(DICTIONARY, row, logger=logger)
+    #heuristic = CrosswordHeuer(DICTIONARY, row, col, lb_global, ub_global, logger=logger)
+    #                 heur,        name,       desc,         dispatcher, priority, freq)
+    # HEUER
+    model.includeHeur(heuristic, "PyHeur", "custom heuristic implemented in python", "Y",
+                      timingmask=SCIP_HEURTIMING.BEFORENODE)
 
     model.includeConshdlr(conshdlr, "crossword",
                           "Crossword", chckpriority=-10,
-                          enfopriority = -10, propfreq=1)  # 
+                          enfopriority = -10, propfreq=20)
     
 
     # Add horizontal 
-    domains = {}
     vars = []
     for x in range(row):
         for y in range(col):
             for l in range(lb_global, ub_global+1):
                 var = s[x, y, l]
                 vars.append(var)
-                vals = set(range(int(round(var.getLbLocal())), int(round(var.getUbLocal())) + 1))
-                domains[var.ptr()] = vals
+                #vals = set(range(int(round(var.getLbLocal())), int(round(var.getUbLocal())) + 1))
+                #domains[var.ptr()] = vals
     cons = model.createCons(conshdlr, "crossword")
     cons.data = SimpleNamespace() 
     cons.data.vars = vars
-    cons.data.domains = domains
+    #cons.data.domains = domains
     model.addPyCons(cons)
 
     # http://scip.zib.de/doc/html/group__ParameterMethods.php#gab2bc4ccd8d9797f1e1b2d7aaefa6500e
     #model.setEmphasis(SCIP_PARAMEMPHASIS.CPSOLVER) # No LP Relaxtion
-    model.setPresolve(SCIP_PARAMSETTING.OFF)  # Turn of presolver
+    model.setPresolve(SCIP_PARAMSETTING.OFF)  # Turn off presolver
     model.setBoolParam("misc/allowdualreds", False)
     #model.hideOutput()
     model.optimize()
@@ -121,7 +137,8 @@ def solve(row=10, col=10):
         out = ''
         for y in range(col):
             for l in range(lb_global, ub_global+1):
-                if model.getVal(s[x, y, l]) >= 0.8:
+                #letter = 1
+                if model.getVal(s[x, y, l]) >= 0.2:
                     letter = l
             out += "{:2} | ".format(string.ascii_uppercase[int(letter)])
         print(out)
@@ -131,7 +148,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 3
+    count = 4
     solve(row=count, col=count)
 
 if __name__ == "__main__":
