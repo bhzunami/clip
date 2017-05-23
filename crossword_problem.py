@@ -59,11 +59,20 @@ DICTIONARY2 = ['BRAUSE', 'RASA', 'ANONYM', 'UHUS', 'SALATE',
 
 """
 T U N
-A   T
+A   U
 T O T
+
+T A T
+U   O
+N U T
+
+B A
+C
 """
 
-DICTIONARY = ['TUN', 'NUT', 'TAT', 'TOT']
+DICTIONARY2 = ['TUN', 'NUT', 'TAT', 'TOT']
+DICTIONARY2 = ['BA', 'BC']
+
 
 def getWords():
     num_words = []
@@ -130,7 +139,7 @@ def solve(row=10, col=10):
                           "Crossword", chckpriority=-10, maxprerounds=1,
                           enfopriority=-10, propfreq=10)
     
-    #model.setObjective(quicksum(s[x, y, 26] for x in range(col) for y in range(row)), "minimize")
+    model.setObjective(quicksum(s[x, y, 26] for x in range(col) for y in range(row)), "minimize")
 
     # Add horizontal 
     vars = []
@@ -175,7 +184,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 3
+    count = 4
     solve(row=count, col=count)
 
 if __name__ == "__main__":

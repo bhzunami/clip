@@ -56,10 +56,10 @@ class CrosswordsHdlr(Conshdlr):
         for x in range(self.row):
             row = []
             for y in range(self.col):
-                for l in range(self.lb, self.ub):
+                for l in range(0, len(ALPHABET)):
                     name = "{}-{}-{}".format(x, y, l)
                     var = [v for v in vars if v.name == name][0]
-                    if self.model.getSolVal(sol, var) > 0.2:
+                    if self.model.getSolVal(sol, var) > 0.5:
                         row.append(ALPHABET[l])
 
             # Only one letter per field is allowed
@@ -84,27 +84,42 @@ class CrosswordsHdlr(Conshdlr):
             word = []
             for y in range(self.col):
                 try:
-                    word.append(cross[x][y])
+                    if cross[x][y] == ' ':
+                        builded_words.append(''.join(word))
+                        word = []
+                    else:
+                        word.append(cross[x][y])
                 except IndexError:
                     print("Not valid")
                     return False
             # Create word
             builded_words.append(''.join(word))
 
+        
         # Check horizontal words
         for x in range(self.row):
             word = []
             for y in range(self.col):
-                word.append(cross[y][x])
+                if cross[y][x] == ' ':
+                    builded_words.append(''.join(word))
+                    word = []
+                else:
+                    word.append(cross[y][x])
             # Create word
             builded_words.append(''.join(word))
 
-        #builded_words = [word for word in builded_words if len(word) > 1]
+        #pdb.set_trace()
+
+        builded_words = [word for word in builded_words if len(word) > 1]
+        
+        if len(builded_words) != len(set(builded_words)):
+            return False
+
         words = self.dictionary.copy()
         for word in builded_words:
             if word not in words:
                 return False
-            del words[words.index(word)]
+            #del words[words.index(word)]
 
         return True
 
@@ -153,8 +168,8 @@ class CrosswordsHdlr(Conshdlr):
 
     def letter_is_possible_at(self, letter, row, y):
         #print("CHECK IF LETTER {} is possible at position {} row {}".format(letter, y, row))
-        # if letter == 26:
-        #     return True
+        if letter == 26:
+            return True
 
         # # Check if pos-1 and pos+1 are black blocks
         # if y-1 < 0 and len(row[y+1]) == 1 and row[y+1][0] == 26:
@@ -259,27 +274,54 @@ class CrosswordsHdlr(Conshdlr):
             for y in range(self.col):
                 possible_letters_h = []
                 row = solution[x]
-                for letter in solution[x][y]:
-                    if self.letter_is_possible_at(letter, row, y):
-                        possible_letters_h.append(letter)
-
-                #print("H Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters_h]))
-                
-                possible_letters_v = []
-                # Build list for possible letters on y axis
-
                 col = []
                 for el in range(self.col):
                     col.append(solution[el][y])
 
+                possible_letters_v = []
+
                 for letter in solution[x][y]:
+                    if self.letter_is_possible_at(letter, row, y):
+                        possible_letters_h.append(letter)
                     if self.letter_is_possible_at(letter, col, x):
                         possible_letters_v.append(letter)
-                #
-                #print("V Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters_v]))
-                
-                possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
 
+                #print("H Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters_h]))
+                
+                # Build list for possible letters on y axis
+
+                
+                #for letter in solution[x][y]:
+                # if self.letter_is_possible_at(letter, col, x):
+                #         possible_letters_v.append(letter)
+
+                #print("V Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters_v]))
+
+                # Wenn x + 1 oder x-1 nicht definiert (len(solution[x+1][y]) > 1) dann kein Intersect
+
+                is_fixed_up = x == 0 or len(solution[x-1][y]) == 1
+                is_fixed_left = y == 0 or len(solution[x][y-1]) == 1
+                is_fixed_down = x == (self.col - 1) or len(solution[x+1][y]) == 1
+                is_fixed_right = y == (self.row -1) or len(solution[x][y+1]) == 1
+
+                is_26_up = x == 0  or (is_fixed_up and solution[x-1][y][0] == 26)
+                is_26_left = y == 0 or (is_fixed_left and solution[x][y-1][0] == 26)
+                is_26_down = x == (self.col - 1) or (is_fixed_down and solution[x+1][y][0] == 26)
+                is_26_right = y == (self.row -1) or (is_fixed_right and solution[x][y+1][0] == 26)
+
+                # possible_letters = []
+                if is_26_left and is_26_right:
+                    possible_letters = possible_letters_v
+                elif is_26_up and is_26_down:
+                    possible_letters = possible_letters_h
+                elif is_fixed_up and not is_26_up and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
+                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
+                elif is_fixed_down and not is_26_down and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
+                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
+                else:
+                    possible_letters = set(possible_letters_h + possible_letters_v)
+
+                # Wenn fixed_up true und nit 26 and (fixed_left true und nit 26 or fixed_right true und nit 26) -> intersect
 
                 if len(possible_letters) == 0:
                     #print("CUTOFF SOLUTION")
