@@ -56,17 +56,14 @@ def solve(row=10, col=10):
                           enfopriority=-10, propfreq=10)
 
     # Add horizontal
-    vars = []
-    vars_2 = {}
+    vars = {}
     for x in range(row):
         for y in range(col):
             for l in range(0, len(ALPHABET)):
-                var = s[x, y, l]
-                vars_2[x, y, l] = var
-                vars.append(var)
+                vars[x, y, l] = s[x, y, l]
     cons = model.createCons(conshdlr, "crossword")
     cons.data = SimpleNamespace()
-    cons.data.vars = vars_2
+    cons.data.vars = vars
     model.addPyCons(cons)
 
     # http://scip.zib.de/doc/html/group__ParameterMethods.php#gab2bc4ccd8d9797f1e1b2d7aaefa6500e
