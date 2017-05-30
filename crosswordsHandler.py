@@ -9,9 +9,11 @@ import numpy as np
 import timer
 import time
 import string
+import datetime
 from types import SimpleNamespace
-
-ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+#from crossword_problem import ALPHABET
+from dictionary import ALPHABET
+#ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 def max_var(vars):
     """
@@ -38,6 +40,8 @@ class CrosswordsHdlr(Conshdlr):
         self.lb = lb
         self.ub = ub
         self.debug = False
+        self.propagater = 0
+        self.time = 0
         self.logger = logger or logging.getLogger(__name__)
 
     def print_cross(self, cross):
@@ -128,7 +132,10 @@ class CrosswordsHdlr(Conshdlr):
 
         cons = constraints[0]  # We only have one constraints
         vars = cons.data.vars
+        t1 = datetime.datetime.now()        
         sol = self.checkCross(vars, solution)
+        t2 = datetime.datetime.now()
+        #print("CONSCHECKTIME: {}".format(t2 - t1))
         #print("conscheck: {} in stage: {}".format(sol, self.model.getStage()))
         if sol:
             return {"result": SCIP_RESULT.FEASIBLE}
@@ -149,41 +156,11 @@ class CrosswordsHdlr(Conshdlr):
         pass
 
 #==========================================
-    # def get_possible_words(self, indexes, letters, x=True):
-    #     if len(indexes) == 0:      # All words are possible
-    #         # Give back words which can pass at this position
-    #         if x:
-    #             return [word for word in self.dictionary if len(word) <= self.row]
-
-    #         return [word for word in self.dictionary if len(word) <= self.col]
-
-    #     words = []
-    #     for word in self.dictionary:
-    #         words.append(word)
-    #         for i, index in enumerate(indexes):
-    #             if word[int(index)] != ALPHABET[int(letters[i])]:
-    #                 del words[words.index(word)]
-    #                 break
-    #     return words
 
     def letter_is_possible_at(self, letter, row, y):
         #print("CHECK IF LETTER {} is possible at position {} row {}".format(letter, y, row))
         if letter == 26:
             return True
-
-        # # Check if pos-1 and pos+1 are black blocks
-        # if y-1 < 0 and len(row[y+1]) == 1 and row[y+1][0] == 26:
-        #     print("Fixed var pos 1")
-        #     return True
-
-        # if y+1 >= self.col and len(row[y-1]) == 1 and row[y-1][0] == 26:
-        #     print("Fixed var pos 1")
-        #     return True
-
-        # if y-1 >= 0 and y+1 < self.col:
-        #     if len(row[y-1]) == 1 and row[y-1][0] == 26 and len(row[y+1]) == 1 and row[y+1][0] == 26:
-        #         print("Fixed var pos 1")
-        #         return True
 
         possible_words = []
         for word in self.dictionary:
@@ -231,7 +208,7 @@ class CrosswordsHdlr(Conshdlr):
             #     pdb.set_trace()
             if impossibles_indices == len(indices):
                 deleted_words += 1
-                
+
             # if not any(list(correct.values())):
             #     deleted_words += 1
             #     #del possible_words[possible_words.index(word)]
@@ -263,13 +240,11 @@ class CrosswordsHdlr(Conshdlr):
                 fff.append(l)
                 fixed_vars += 1
 
+
         # All vars are fixed
         if fixed_vars == self.row * self.col:
             return SCIP_RESULT.DIDNOTFIND
-
-        # for x in range(self.col):
-        #     for y in range(self.row):
-        #         print("{} {}: {}".format(x, y, [string.ascii_uppercase[i] for i in solution[x][y]]))
+        reduce_dom = False
         for x in range(self.row):
             for y in range(self.col):
                 possible_letters_h = []
@@ -286,19 +261,7 @@ class CrosswordsHdlr(Conshdlr):
                     if self.letter_is_possible_at(letter, col, x):
                         possible_letters_v.append(letter)
 
-                #print("H Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters_h]))
-                
-                # Build list for possible letters on y axis
-
-                
-                #for letter in solution[x][y]:
-                # if self.letter_is_possible_at(letter, col, x):
-                #         possible_letters_v.append(letter)
-
-                #print("V Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters_v]))
-
                 # Wenn x + 1 oder x-1 nicht definiert (len(solution[x+1][y]) > 1) dann kein Intersect
-
                 is_fixed_up = x == 0 or len(solution[x-1][y]) == 1
                 is_fixed_left = y == 0 or len(solution[x][y-1]) == 1
                 is_fixed_down = x == (self.col - 1) or len(solution[x+1][y]) == 1
@@ -309,79 +272,55 @@ class CrosswordsHdlr(Conshdlr):
                 is_26_down = x == (self.col - 1) or (is_fixed_down and solution[x+1][y][0] == 26)
                 is_26_right = y == (self.row -1) or (is_fixed_right and solution[x][y+1][0] == 26)
 
-                # possible_letters = []
-                if is_26_left and is_26_right:
-                    possible_letters = possible_letters_v
-                elif is_26_up and is_26_down:
-                    possible_letters = possible_letters_h
-                elif is_fixed_up and not is_26_up and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
-                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
-                elif is_fixed_down and not is_26_down and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
-                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
-                else:
-                    possible_letters = set(possible_letters_h + possible_letters_v)
+                # Rechts und links steht 26
+                # if is_26_left and is_26_right:
+                #     possible_letters = possible_letters_v
 
-                # Wenn fixed_up true und nit 26 and (fixed_left true und nit 26 or fixed_right true und nit 26) -> intersect
+                # # Oben unten steht 26
+                # elif is_26_up and is_26_down:
+                #     possible_letters = possible_letters_h
 
+                # # Oben fix und nicht 26 (oebn)
+                # # und links oder rechts ist fixiert aber nicht mit 26
+                # elif is_fixed_up and not is_26_up and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
+                #     possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
+
+                # # unten fix und nicht 26 (unten)
+                # # und links oder rechts ist fixiert aber nicht mit 26
+                # elif is_fixed_down and not is_26_down and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
+                #     possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
+                # # Ansonsten alles offen
+                # else:
+                #     possible_letters = set(possible_letters_h + possible_letters_v)
+
+                possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
+                #print("Possible: {} at pos {}, {}".format([ALPHABET[l] for l in possible_letters], x, y))
                 if len(possible_letters) == 0:
-                    #print("CUTOFF SOLUTION")
                     return SCIP_RESULT.CUTOFF
 
                 for var in [v for v in cons.data.vars if v.name.startswith("{}-{}".format(x, y))]:
                     x2, y2, l2 = [int(v) for v in var.name.split('-')]
-                    if l2 not in possible_letters:
+                    if l2 not in possible_letters and var.getUbLocal() >= 0.5:
+                        reduce_dom = True
                         self.model.chgVarUb(var, -0.0)
 
                 #print("Possibles Letters for {} {} are: {}".format(x, y, [ALPHABET[i] for i in possible_letters]))
 
         #print("FINISH")
-        return SCIP_RESULT.REDUCEDDOM
-        # for i, x in enumerate(not_fixed_vars[0]):
-        #     possible_letters = []
-        #     y = not_fixed_vars[1][i]   # position of col
-        #     indexes = np.where(solution[x] >= 0)[0]
+        if reduce_dom:
+            return SCIP_RESULT.REDUCEDDOM
 
-        #     # horizontal
-        #     possible_words = self.get_possible_words(np.where(solution[x] >= 0)[0],
-        #                                              solution[x][np.where(solution[x] >= 0)],
-        #                                              x=True)
-        #     possible_letters_h = set([le[y] for le in possible_words])
-
-        #     # Vertical
-        #     possible_words = self.get_possible_words(np.where(solution.T[y] >= 0)[0],
-        #                                              solution.T[y][np.where(solution.T[y] >= 0)],
-        #                                              x=False)
-
-        #     possible_letters_v = set([le[x] for le in possible_words])
-        #     possible_letters = possible_letters_v.intersection(possible_letters_h)
-            
-        #     # Remove duplicate
-        #     #print(possible_letters)
-        #     possible_letters = set(possible_letters)
-        #     if len(possible_letters) == 0:
-        #         #print("No solution is possible for {}, {}".format(x, y))
-        #         return SCIP_RESULT.CUTOFF
-
-        #     # possible_letters = set([le[y] for le in possible_words]).union(set([le[x] for le in possible_words]))
-        #     #if len(not_fixed_vars[0]) < 9:
-        #     #    pdb.set_trace()
-        #     #print("Possible letters at pos {}, {} are: {}".format(x, y, possible_letters))
-        #     for var in [v for v in cons.data.vars if v.name.startswith("{}-{}".format(x, y))]:
-        #         x2, y2, l2 = [int(v) for v in var.name.split('-')]
-        #         # print("check possible words: {}".format(set([l[y] for l in possible_words])))
-        #         if string.ascii_uppercase[l2] not in possible_letters:
-        #             # print("Var {} ({})is not in list".format(l2, string.ascii_uppercase[l2]))
-        #             self.model.chgVarUb(var, -0.0)
-        #             reduce = True
-
-        #         if len(possible_words) == 1 and string.ascii_uppercase[l2] in possible_letters:
-        #             self.model.chgVarLb(var, 1.0)
-        # #pdb.set_trace()
-        # return SCIP_RESULT.REDUCEDDOM
+        return SCIP_RESULT.DIDNOTFIND
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
         result = SCIP_RESULT.DIDNOTFIND
+        self.propagater += 1
         #print("CONSPROP: in stage: {}".format(self.model.getStage()))
+        t1 = datetime.datetime.now()
         result = self.propagate_cons(constraints[0])
+        t2 = datetime.datetime.now()
+        #print("Time: {}".format(t2 - t1))
+        self.time = self.time + (t2 - t1).total_seconds()
+        #print("TIME TOTAL: {}".format(self.time))
         #print("RESULT: {}".format(result))
         return {"result": result}

@@ -50,7 +50,7 @@ def solve(row=10, col=10):
 
     # CONSTRAINTS
     # - - - - - - - - - - - - - - - - - -
-    conshdlr = CrosswordsEasyHdlr(DICTIONARY, 0, len(ALPHABET), row=row, col=col, logger=logger)
+    conshdlr = CrosswordsEasyHdlr(DICTIONARY, row=row, col=col, logger=logger)
     model.includeConshdlr(conshdlr, "crossword",
                           "Crossword", chckpriority=-10, maxprerounds=1,
                           enfopriority=-10, propfreq=10)
@@ -92,7 +92,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 6
+    count = 5
     solve(row=count, col=count)
 
 if __name__ == "__main__":

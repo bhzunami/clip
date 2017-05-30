@@ -11,7 +11,7 @@ from dictionary import ALPHABET
 
 EPS = 1.e-6
 class CrosswordsEasyHdlr(Conshdlr):
-    def __init__(self, dictionary, lb, ub, row=10, col=10, logger=None):
+    def __init__(self, dictionary, row=10, col=10, logger=None):
         self.row = row
         self.col = col
         self.dictionary = dictionary
