@@ -38,7 +38,6 @@ def solve(row=10, col=10):
 
     lb_global = min(words_count.keys())
     ub_global = max(words_count.keys())
-    print(lb_global, ub_global)
     # Variabeln für die einzelnen stimmen pro quadrat definieren
     for x in range(row):
         for y in range(col):
@@ -52,7 +51,7 @@ def solve(row=10, col=10):
 
     # CONSTRAINTS
     # - - - - - - - - - - - - - - - - - -
-    conshdlr = CrosswordsHdlr(DICTIONARY, 0, len(ALPHABET), row=row, col=col, logger=logger)
+    conshdlr = CrosswordsHdlr(DICTIONARY, row=row, col=col, logger=logger)
     random.shuffle(DICTIONARY)
     heuristic = CrosswordHeuerBrutetForce(DICTIONARY, row, logger=logger)
     #heuristic = CrosswordHeuer(DICTIONARY, row, col, lb_global, ub_global, logger=logger)
@@ -65,16 +64,15 @@ def solve(row=10, col=10):
                           "Crossword", chckpriority=-10, maxprerounds=1,
                           enfopriority=-10, propfreq=10)
 
-    model.addCons(quicksum(s[x, y, 26] for x in range(col) for y in range(row)) >= 1)
+    #model.addCons(quicksum(s[x, y, 26] for x in range(col) for y in range(row)) >= 1)
     model.setObjective(quicksum(s[x, y, 26] for x in range(col) for y in range(row)), "minimize")
 
     # Add horizontal
-    vars = []
+    vars = {}
     for x in range(row):
         for y in range(col):
             for l in range(0, len(ALPHABET)):
-                var = s[x, y, l]
-                vars.append(var)
+                vars[x, y, l] = s[x, y, l]
     cons = model.createCons(conshdlr, "crossword")
     cons.data = SimpleNamespace()
     cons.data.vars = vars
@@ -82,7 +80,7 @@ def solve(row=10, col=10):
 
     # http://scip.zib.de/doc/html/group__ParameterMethods.php#gab2bc4ccd8d9797f1e1b2d7aaefa6500e
     #model.setEmphasis(SCIP_PARAMEMPHASIS.CPSOLVER) # No LP Relaxtion
-    #model.setPresolve(SCIP_PARAMSETTING.OFF)  # Turn off presolver
+    model.setPresolve(SCIP_PARAMSETTING.OFF)  # Turn off presolver
     model.setBoolParam("misc/allowdualreds", False)
     #model.hideOutput()
     model.optimize()
