@@ -106,8 +106,21 @@ class CrosswordsHdlr(Conshdlr):
     def conslock(self, constraint, nlockspos, nlocksneg):
         pass
 
+    def check_if_blank_is_possible(row, y):
+        if y == 0:
+            return True
+        # Wenn nur 26 Möglich oder wenn im feld rechts mehr als 1 Buchstabe
+        if len(row[y]) == 1 or len(row[y-1]) >= 1:
+            return True
+        if len(row[y-1]) == 1:
+            # check if we found
+            letter = ALPHABET[row[y-1][0]]
+            possible_words = [word for word in self.dictionary if letter in word]
+        
+
     def letter_is_possible_at(self, letter, row, y):
         if letter == 26:
+            pdb.set_trace()
             return True
 
         letter = ALPHABET[letter]
