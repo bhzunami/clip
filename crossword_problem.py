@@ -62,9 +62,9 @@ def solve(row=10, col=10):
 
     model.includeConshdlr(conshdlr, "crossword",
                           "Crossword", chckpriority=-10, maxprerounds=1,
-                          enfopriority=-10, propfreq=10)
+                          enfopriority=-10, propfreq=1)
 
-    #model.addCons(quicksum(s[x, y, 26] for x in range(col) for y in range(row)) >= 1)
+    #model.addCons(quicksum(s[x, y, 26] for x in range(col) for y in range(row)) == 8)
     model.setObjective(quicksum(s[x, y, 26] for x in range(col) for y in range(row)), "minimize")
 
     # Add horizontal
@@ -106,7 +106,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 4
+    count = 3
     solve(row=count, col=count)
 
 if __name__ == "__main__":
