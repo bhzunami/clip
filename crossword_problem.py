@@ -106,7 +106,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 3
+    count = 6
     solve(row=count, col=count)
 
 if __name__ == "__main__":

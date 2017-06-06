@@ -341,10 +341,31 @@ DICTIONARY_ = ['HAU', 'BAND', 'ASSE', 'DEIN', 'BAD', 'HASE', 'ANSI', 'UDEN']
 DICTIONARY_ = ['HAUS', 'LUX', 'FERD', 'BOD', 'FB', 'ALEO', 'UURD', 'SXD']
 DICTIONARY_ = ['TUN', 'NUT', 'TAT', 'TOT']
 DICTIONARY_ = ['BA', 'BC']
-DICTIONARY = ['IN', 'IF', 'NUT', 'NO', 'FUN', 'TO']
+DICTIONARY_ = ['IN', 'IF', 'NUT', 'NO', 'FUN', 'TO']
 DICTIONARY_ = ['HAUS', 'BANDE', 'AS', 'ER', 'DEINE', 'BADE', 'HASEN', 'AN', 'UDENR' 'SERE', 'ENSR', 'IS']
 DICTIONARY_ = ['HOSES', 'LASER', 'SAILS', 'SHEET', 'STEER', 'HEEL', 'HIKE', 'KEEL', 'KNOT' 'LINE', 'AFT', 'ALE', 'EEL', 'LEE', 'TIE']
 DICTIONARY_ = ['BAR', 'IR', 'SONNE', 'HM', 'ENG', 'AMI', 'GRUNDE', 'AS', 'UR', 'ASMARA', 'RO', 'MUS', 'NEIN', 'INN', 'DU', 'REGLER']
+
+
+DICTIONARY = ['BRAUSE', 'RASA', 'ANONYM', 'SALATE',
+               'BREZEL', 'NATION', 'ANHAND',
+               'SOUL', 'ANSAGE', 'ALBEN', 'ORCA', 'INSEKT', 
+               'REGATTA', 'BOLERO', 'RAMPE', 'MALEN', 
+               'EIGELB', 'ALBEREI', 'SULTAN', 
+               'ETAT', 'SPAT', 'APFEL', 'EIBE', 'PANGEA',
+               'SOLE', 'LATERAL', 'TAKT', 'TEEN', 
+               'GAGA', 'ASBEST', 'UHRWERK',
+               'ADELIGER', 'UMTUN',
+               'MIES', 'SEMINAR', 'FASELEI', 'SOLEI',
+               'FLORA', 'GRILLEN', 'GEHEN', 'GROSSMACHT', 'OHNE',
+               'KARO', 'BETEN', 'STAR', 'SELIG', 'LITER',
+               'ZEILE', 'LEDIG', 'NEON', 'ANSEHEN', 'LUPINE', 
+               'THRON', 'LIEBE', 'LIBERAL', 'OASE', 'SPULE', 'ISTER',
+               'LOCKER', 'TRIEL', 'RAIN', 'PFAND', 'FRITZ',
+               'GEWEBE', 'AZUBI', 'ANATHEM',
+               'FRITZ', 'SEIFE', 'FAKTUR', 'PFARRER', 'FEGE',
+               'FIGUR', 'KLUEVER', 'FEIERN', 'BACKOFEN', 'REISSER',
+               'LEBHAFT']
 
 DICTIONARY_ = ['BRAUSE', 'RASA', 'ANONYM', 'UHUS', 'SALATE',
                'DEN', 'LOS', 'BREZEL', 'ECK', 'NATION', 'ANHAND',

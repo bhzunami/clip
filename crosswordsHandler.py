@@ -31,24 +31,41 @@ class CrosswordsHdlr(Conshdlr):
         print("-----------------")
 
     def buildCross(self, vars, sol=None):
-        solution = []
+        solution = np.zeros((self.col, self.row), dtype=str)
         for x in range(self.row):
-            row = []
             for y in range(self.col):
+                var_set = False
                 for l in range(0, len(ALPHABET)):
                     var = vars[x, y, l]
                     if self.model.getSolVal(sol, var) > 0.5:
-                        row.append(ALPHABET[l])
-            solution.append(row)
+                        if var_set:
+                            raise Exception("Invalid")
+                        solution[x][y] = ALPHABET[l]
+                        var_set = True
         return solution
 
     def checkCross(self, vars, solution=None):
-        cross = self.buildCross(vars, solution)
-
-        if not cross or len(cross[0]) == 0:
+        try:
+            cross = self.buildCross(vars, solution)
+        except Exception:
             return False
 
-        # self.print_cross(cross)
+        if len(np.where(cross == '')[0]) > 0:
+            return False
+
+        for x, row in enumerate(cross):
+            for y, letter in enumerate(row):
+                col = [cross[el][y] for el in range(self.col)]
+
+                is_26_left = y == 0 or row[y-1] == ' '
+                is_26_right = y == self.row - 1 or row[y+1] == ' '
+                is_26_up = x == 0 or col[x-1] == ' '
+                is_26_down = x == self.col - 1 or col[x+1] == ' '
+
+                if is_26_down and is_26_left and is_26_right and is_26_up:
+                    return False
+
+        #self.print_cross(cross)
         builded_words = []
         # Check vertical words
         for x in range(self.row):
@@ -153,16 +170,105 @@ class CrosswordsHdlr(Conshdlr):
 
         return False
 
-    def letter_is_possible_at(self, letter, row, y):
-        if letter == 26:
-            return True
+    def find_possible_letters(self, row, y,
+                              possible_letters, possible_words):
 
+        if len(row[y]) == 1:
+            return row[y], False
+
+        is_fixed_left = y == 0 or len(row[y-1]) == 1
+        is_fixed_right = y == (self.row -1) or len(row[y+1]) == 1
+        is_26_left = y == 0 or (is_fixed_left and row[y-1][0] == 26)
+        is_26_right = y == (self.row -1) or (is_fixed_right and row[y+1][0] == 26)
+
+        # Rechts und links steht 26
+        if (is_26_left and is_26_right) or len(possible_letters) == 0:
+            return (list(range(len(ALPHABET))), True)
+
+        # Links und rechts buchstaben fixiert
+        if is_fixed_right and is_fixed_left:
+            #print([[ALPHABET[l] for l in x] for x in row])
+            if len(possible_letters) == 1 and possible_letters[0] == 26:
+                return ([26], False)
+
+            if is_26_left:
+                letter_left = r'\b'
+                letter_right = ALPHABET[row[y+1][0]]
+            elif is_26_right:
+                letter_left = ALPHABET[row[y-1][0]]
+                letter_right = r'\b'
+            else:
+                letter_left = ALPHABET[row[y-1][0]]
+                letter_right = ALPHABET[row[y+1][0]]
+            search = r"{}([{}]){}" \
+                     .format(letter_left,
+                             ''.join([ALPHABET[l] for l in possible_letters]), letter_right)
+            #print(search)
+            matched_words = set()
+            matched_letters = set()
+            for word in possible_words:
+                match = re.search(search, word)
+                if match:
+                    matched_words.add(match.string)
+                    matched_letters.add(match.group(1))
+            if len(matched_words) == 0:
+                return ([26], False)
+            return ([ALPHABET.index(l) for l in matched_letters], False)
+
+        if is_26_left:
+            return possible_letters, True
+        if is_fixed_left:
+            letter_left = ALPHABET[row[y-1][0]]
+            search = r"{}([{}])(?:[{}]|\b)" \
+                     .format(letter_left,
+                             ''.join([ALPHABET[l] for l in possible_letters]),
+                             ''.join([ALPHABET[l] for l in row[y+1]]))
+            #print(search)
+            matched_words = set()
+            matched_letters = set()
+            for word in possible_words:
+                try:
+                    match = re.search(search, word)
+                except Exception:
+                    pdb.set_trace()
+                if match:
+                    matched_words.add(match.string)
+                    matched_letters.add(match.group(1))
+            if len(matched_words) == 0:
+                return [26], False
+            return ([ALPHABET.index(l) for l in matched_letters], False)
+
+        if is_26_right:
+            return possible_letters, True
+        if is_fixed_right:
+            letter_right = ALPHABET[row[y+1][0]]
+            search = r"(?:[{}]|\b)([{}]){}" \
+                     .format(''.join([ALPHABET[l] for l in row[y-1]]),
+                             ''.join([ALPHABET[l] for l in possible_letters]),
+                             letter_right)
+            #print(search)
+            matched_words = set()
+            matched_letters = set()
+            for word in possible_words:
+                match = re.search(search, word)
+                if match:
+                    matched_words.add(match.string)
+                    matched_letters.add(match.group(1))
+            if len(matched_words) == 0:
+                return [26], False
+            return ([ALPHABET.index(l) for l in matched_letters], False)
+
+        return possible_letters, False
+
+
+    def words_possible_at(self, letter, row, y):
         letter = ALPHABET[letter]
-        possible_words = [word for word in self.dictionary if letter in word]
         # All possible Words
         # Check if Bike can be placed
-
-        for word in possible_words.copy():
+        possible_words = []
+        for word in self.dictionary:
+            if letter not in word:
+                continue
             indices = [i for i, l in enumerate(word) if l == letter]
             # impossibles_indices = 0
             for idx in indices:
@@ -182,18 +288,18 @@ class CrosswordsHdlr(Conshdlr):
                         break
                 if break_:
                     continue
-
-                return True
-
-        return False
+                possible_words.append(word)
+        return possible_words
 
 
     def propagate_cons(self, cons):
         solution = np.zeros([self.row, self.col]).tolist()
+        fixed_letters = np.zeros([self.row, self.col])
 
         for x in range(self.row):
             for y in range(self.col):
                 solution[x][y] = []
+                fixed_letters[x][y] = -1
 
         fixed_vars = 0
         for key, var in cons.data.vars.items():
@@ -205,123 +311,56 @@ class CrosswordsHdlr(Conshdlr):
             # Fixed
             if var.getLbLocal() >= 0.5:
                 solution[x][y].append(l)
+                fixed_letters[x][y] = l
                 fixed_vars += 1
 
-
+        #print("FIXED: {}".format(fixed_vars))
         # All vars are fixed
         if fixed_vars == self.row * self.col:
             return SCIP_RESULT.DIDNOTFIND
 
-        # for x in range(self.row):
-        #     col = []
-        #     for y in range(self.col):
-        #         col.append([ALPHABET[l] for l in solution[x][y]])
-        #     print(col)
-        #     print()
-
-
         reduce_dom = False
-        for x in range(self.row):
-            row = copy.deepcopy(solution[x])
-            for y in range(self.col):
-                               
-                # Wenn x + 1 oder x-1 nicht definiert (len(solution[x+1][y]) > 1) dann kein Intersect
-                is_fixed_up = x == 0 or len(solution[x-1][y]) == 1
-                is_fixed_left = y == 0 or len(solution[x][y-1]) == 1
-                is_fixed_down = x == (self.col - 1) or len(solution[x+1][y]) == 1
-                is_fixed_right = y == (self.row -1) or len(solution[x][y+1]) == 1
-
-                is_26_up = x == 0 or (is_fixed_up and solution[x-1][y][0] == 26)
-                is_26_left = y == 0 or (is_fixed_left and solution[x][y-1][0] == 26)
-                is_26_down = x == (self.col - 1) or (is_fixed_down and solution[x+1][y][0] == 26)
-                is_26_right = y == (self.row -1) or (is_fixed_right and solution[x][y+1][0] == 26)
-
+        for x, row in enumerate(solution):
+            #row = copy.deepcopy(solution[x])
+            for y, let in enumerate(row):
+                col = [solution[el][y] for el in range(self.col)]
                 possible_letters_h = []
-                col = []
-                for el in range(self.col):
-                    col.append(solution[el][y])
-
                 possible_letters_v = []
-                for letter in sorted(solution[x][y]):
-                    if self.letter_is_possible_at(letter, row, y):
+                possible_words_h = set()
+                possible_words_v = set()
+                for letter in row[y]:
+                    if letter == 26:
+                        possible_letters_v.append(26)
+                        possible_letters_h.append(26)
+                        continue
+
+                    words = self.words_possible_at(letter, row, y)
+                    if len(words) > 0:
                         possible_letters_h.append(letter)
+                        possible_words_h.update(words)
 
-                    if self.letter_is_possible_at(letter, col, x):
+                    words = self.words_possible_at(letter, col, x)
+                    if len(words) > 0:
                         possible_letters_v.append(letter)
+                        possible_words_v.update(words)
 
+                possible_letters_h, intersect_h = self.find_possible_letters(row, y, possible_letters_h, possible_words_h)
+                possible_letters_v, intersect_v = self.find_possible_letters(col, x, possible_letters_v, possible_words_v)
 
-
-                # Rechts und links steht 26
-                if is_26_left and is_26_right:
-                    possible_letters = possible_letters_v
-
-                # Oben unten steht 26
-                elif is_26_up and is_26_down:
-                    possible_letters = possible_letters_h
-
-                # Links und rechts buchstaben fixiert
-                elif is_fixed_right and  is_fixed_left:
-                    pdb.set_trace()
-                    #print([[ALPHABET[l] for l in x] for x in row])
-                    if len(possible_letters_h) == 0:
-                        possible_letters = [26]
-                    elif len(possible_letters_h) == 1 and possible_letters_h[0] == 26:
-                        possible_letters = [26]
-
-                    else:
-                        if y == 0:
-                            letter_left = ' '
-                            letter_right = ALPHABET[row[y+1][0]]
-                        elif y == self.col - 1:
-                            letter_left = ALPHABET[row[y-1][0]]
-                            letter_right = ' '
-                        else:
-                            letter_left = ALPHABET[row[y-1][0]]
-                            letter_right = ALPHABET[row[y+1][0]]
-                        search = "(?={}[{}]{})".format(letter_left, ''.join([ALPHABET[l] for l in possible_letters_h]), letter_right)
-                        print(search)
-                        matched_words = []
-                        for word in self.dictionary:
-                            match = [match.string for match in re.finditer(search, word)]
-                            if not match:
-                                continue
-                            matched_words.append(match)
-                        if len(matched_words) == 0:
-                            possible_letters = [26]
-                        else:
-                            pdb.set_trace()
-
-                # Nur links buchstaben fixiert
-                # TODO
-                # nur rechts buchstaben fixiert
-                # TODO
-
-                #
-                elif is_fixed_right or is_fixed_left:
-                    possible_letters = possible_letters_v
-
-                elif is_fixed_up or is_fixed_down:
-                    possible_letters = possible_letters_h
-                
-                # Oben fix und nicht 26 (oebn)
-                # und links oder rechts ist fixiert aber nicht mit 26
-                elif is_fixed_up and not is_26_up and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
-                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
-
-                # unten fix und nicht 26 (unten)
-                # und links oder rechts ist fixiert aber nicht mit 26
-                elif is_fixed_down and not is_26_down and ((is_fixed_left and not is_26_left) or (is_fixed_right and not is_26_right) ):
-                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
-                # Ansonsten alles offen
-                else:
+                if not intersect_h and not intersect_v:
                     possible_letters = set(possible_letters_h + possible_letters_v)
+                elif not intersect_v:
+                    possible_letters = possible_letters_v
+                elif not intersect_h:
+                    possible_letters = possible_letters_h
+                elif len(possible_letters_h) == len(ALPHABET) and len(possible_letters_v) == len(ALPHABET):
+                    return SCIP_RESULT.CUTOFF
+                else:
+                    possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
 
-                #print("Moeglichkeiten bei [{}][{}]: {}".format(x, y, [ALPHABET[l] for l in possible_letters]))
-
-
-                #possible_letters = self.test(x, y, possible_letters, row, col)
-
-                # possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
+                #print("*"*10)
+                #print("pos: [{}][{}] {}".format(x, y, possible_letters))
+                #pdb.set_trace()
                 if len(possible_letters) == 0:
                     return SCIP_RESULT.CUTOFF
 
@@ -330,26 +369,6 @@ class CrosswordsHdlr(Conshdlr):
                         reduce_dom = True
                         self.model.chgVarUb(cons.data.vars[x, y, i], -0.0)
 
-        # solution = np.zeros([self.row, self.col]).tolist()
-
-        # for x in range(self.row):
-        #     for y in range(self.col):
-        #         solution[x][y] = []
-
-        # fixed_vars = 0
-        # for key, var in cons.data.vars.items():
-        #     x, y, l = key
-        #     # Not fixed but possible
-        #     if var.getUbLocal() >= 0.5 and var.getLbLocal() <= 0.5:
-        #         solution[x][y].append(ALPHABET[l])
-
-        #     # Fixed
-        #     if var.getLbLocal() >= 0.5:
-        #         solution[x][y].append(ALPHABET[l])
-        #         fixed_vars += 1
-
-        # print(solution)
-        #pdb.set_trace()
 
         if reduce_dom:
             return SCIP_RESULT.REDUCEDDOM
@@ -357,47 +376,34 @@ class CrosswordsHdlr(Conshdlr):
         return SCIP_RESULT.DIDNOTFIND
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
-        return {"result": self.propagate_cons(constraints[0])}
+        result = self.propagate_cons(constraints[0])
+        # if result == SCIP_RESULT.DIDNOTFIND:
+        #     solution = np.zeros([self.row, self.col]).tolist()
+        #     fixed_letters = np.zeros([self.row, self.col])
 
+        #     for x in range(self.row):
+        #         for y in range(self.col):
+        #             solution[x][y] = []
+        #             fixed_letters[x][y] = -1
 
-    def test(self, x, y, possible_letters, row, col):
+        #     fixed_vars = 0
+        #     for key, var in constraints[0].data.vars.items():
+        #         x, y, l = key
+        #         # Not fixed but possible
+        #         if var.getUbLocal() >= 0.5 and var.getLbLocal() <= 0.5:
+        #             solution[x][y].append(l)
 
-        if len(row[x]) == 1 and len(col[y]) == 1:
-             return possible_letters
+        #         # Fixed
+        #         if var.getLbLocal() >= 0.5:
+        #             solution[x][y].append(l)
+        #             fixed_letters[x][y] = l
+        #             fixed_vars += 1
 
-        f_h = [(i, l) for i, l in enumerate(row) if len(l) == 1]
-        f_v = [(i, l) for i, l in enumerate(col) if len(l) == 1]
-        if not f_h and not f_v:
-            return possible_letters
-
-        for pos, l in f_h:
-            offset = y - pos
-            for letter in possible_letters:
-                if letter == 26:
-                    continue
-                letter = ALPHABET[letter]
-                p_w = [word for word in self.dictionary if letter in word]
-                for word in p_w.copy():
-                    indices = [i for i, l in enumerate(word) if l == letter]
-                    impossibles_indices = 0
-                    for idx in indices:
-                        if y - idx < 0:
-                            impossibles_indices += 1
-                            continue
-                        temp_y = y - idx
-
-                        if temp_y + len(word) > self.col:
-                            impossibles_indices += 1
-                            continue
-
-                        if pos < temp_y:  # This fixed position is not interessting
-                            continue
-
-                        for l_idx, l in enumerate(word):
-                            if ALPHABET.index(l) not in row[temp_y+l_idx]:
-                                impossibles_indices += 1
-                                break
-                
-
-        pdb.set_trace()   
-        return possible_letters
+        #     for row in solution:
+        #         col = []
+        #         for letter in row:
+        #             col.append([ALPHABET[l] for l in letter])
+        #         print("{}".format(col))
+        #     print("-"*6)
+        #     pdb.set_trace()
+        return {"result": result}
