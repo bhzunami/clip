@@ -64,7 +64,7 @@ def solve(row=10, col=10):
                           "Crossword", chckpriority=-10, maxprerounds=1,
                           enfopriority=-10, propfreq=1)
 
-    #model.addCons(quicksum(s[x, y, 26] for x in range(col) for y in range(row)) == 8)
+    #model.addCons(quicksum(s[x, y, 26] for x in range(col) for y in range(row)) <= 2)
     model.setObjective(quicksum(s[x, y, 26] for x in range(col) for y in range(row)), "minimize")
 
     # Add horizontal

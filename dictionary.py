@@ -338,7 +338,7 @@ G R U N D E
 
 
 DICTIONARY_ = ['HAU', 'BAND', 'ASSE', 'DEIN', 'BAD', 'HASE', 'ANSI', 'UDEN']
-DICTIONARY_ = ['HAUS', 'LUX', 'FERD', 'BOD', 'FB', 'ALEO', 'UURD', 'SXD']
+DICTIONARY = ['HAUS', 'LUX', 'FERD', 'BOD', 'FB', 'ALEO', 'UURD', 'SXD']
 DICTIONARY_ = ['TUN', 'NUT', 'TAT', 'TOT']
 DICTIONARY_ = ['BA', 'BC']
 DICTIONARY_ = ['IN', 'IF', 'NUT', 'NO', 'FUN', 'TO']
@@ -347,7 +347,7 @@ DICTIONARY_ = ['HOSES', 'LASER', 'SAILS', 'SHEET', 'STEER', 'HEEL', 'HIKE', 'KEE
 DICTIONARY_ = ['BAR', 'IR', 'SONNE', 'HM', 'ENG', 'AMI', 'GRUNDE', 'AS', 'UR', 'ASMARA', 'RO', 'MUS', 'NEIN', 'INN', 'DU', 'REGLER']
 
 
-DICTIONARY = ['BRAUSE', 'RASA', 'ANONYM', 'SALATE',
+DICTIONARY_ = ['BRAUSE', 'RASA', 'ANONYM', 'SALATE',
                'BREZEL', 'NATION', 'ANHAND',
                'SOUL', 'ANSAGE', 'ALBEN', 'ORCA', 'INSEKT', 
                'REGATTA', 'BOLERO', 'RAMPE', 'MALEN', 

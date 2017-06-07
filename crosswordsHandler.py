@@ -125,51 +125,6 @@ class CrosswordsHdlr(Conshdlr):
     def conslock(self, constraint, nlockspos, nlocksneg):
         pass
 
-    def check_if_blank_is_possible(self, row, y):
-        if y == 0:
-            return True
-        # Wenn nur 26 Möglich
-        if len(row[y]) == 1 or (len(row[y-1]) > 1 and (y+1 <= self.col and len(row[y+1]) > 1)):
-            return True
-        letters = np.array(row[y])
-        letter_is_not_pos = 0
-        for letter in np.delete(letters, np.where(letters == 26)[0][0]):
-            letter = ALPHABET[letter]
-            print("Check letter {}".format(letter))
-            possible_words = [word for word in self.dictionary if letter in word]
-            print("Possible words for letter {}: {}".format(letter, possible_words))
-            deleted_words = 0
-            for word in possible_words.copy():
-                print("Check word: {}".format(word))
-                indices = [i for i, l in enumerate(word) if l == letter]
-                impossibles_indices = 0
-                for idx in indices:
-                    if y - idx < 0:
-                        impossibles_indices += 1
-                        continue
-                    temp_y = y - idx
-
-                    if temp_y + len(word) > self.col:
-                        impossibles_indices += 1
-                        continue
-
-                    print("Word {} has enough space".format(word) )
-                    for l_idx, l in enumerate(word):
-                        print("Check letter {} at pos {}".format(l, row[temp_y+l_idx]))
-                        if ALPHABET.index(l) not in row[temp_y+l_idx] and len(row[temp_y+l_idx]) > 1:
-                            impossibles_indices += 1
-                            break
-                if impossibles_indices == len(indices):
-                    deleted_words += 1
-
-            if deleted_words == len(possible_words):
-                letter_is_not_pos += 1
-
-        if letter_is_not_pos == len(letters)-1:
-            return True
-
-        return False
-
     def find_possible_letters(self, row, y,
                               possible_letters, possible_words):
 
@@ -181,82 +136,48 @@ class CrosswordsHdlr(Conshdlr):
         is_26_left = y == 0 or (is_fixed_left and row[y-1][0] == 26)
         is_26_right = y == (self.row -1) or (is_fixed_right and row[y+1][0] == 26)
 
-        # Rechts und links steht 26
         if (is_26_left and is_26_right) or len(possible_letters) == 0:
             return (list(range(len(ALPHABET))), True)
 
-        # Links und rechts buchstaben fixiert
-        if is_fixed_right and is_fixed_left:
-            #print([[ALPHABET[l] for l in x] for x in row])
-            if len(possible_letters) == 1 and possible_letters[0] == 26:
-                return ([26], False)
+        def get_chars(chars):
+            return ''.join([ALPHABET[l] for l in chars if l != 26])
 
-            if is_26_left:
-                letter_left = r'\b'
-                letter_right = ALPHABET[row[y+1][0]]
-            elif is_26_right:
-                letter_left = ALPHABET[row[y-1][0]]
-                letter_right = r'\b'
-            else:
-                letter_left = ALPHABET[row[y-1][0]]
-                letter_right = ALPHABET[row[y+1][0]]
-            search = r"{}([{}]){}" \
-                     .format(letter_left,
-                             ''.join([ALPHABET[l] for l in possible_letters]), letter_right)
-            #print(search)
-            matched_words = set()
-            matched_letters = set()
-            for word in possible_words:
-                match = re.search(search, word)
-                if match:
-                    matched_words.add(match.string)
-                    matched_letters.add(match.group(1))
-            if len(matched_words) == 0:
-                return ([26], False)
-            return ([ALPHABET.index(l) for l in matched_letters], False)
+        def get_left(row, y):
+            if y < 0 or len(row[y]) == 0 or (len(row[y]) == 1 and row[y][0] == 26):
+                return r"^"
+            part = r"{}[{}]".format(get_left(row, y-1), get_chars(row[y]))
+            if 26 in row[y]:
+                return r"(?:{}|^)".format(part)
+            return part
 
-        if is_26_left:
+        def get_right(row, y):
+            if y >= len(row) or len(row[y]) == 0 or (len(row[y]) == 1 and row[y][0] == 26):
+                return r"$"
+            part = r"[{}]{}".format(get_chars(row[y]), get_right(row, y+1))
+            if 26 in row[y]:
+                return r"(?:$|{})".format(part)
+            return part
+
+        regex = r"{}([{}]){}".format(get_left(row, y-1), get_chars(possible_letters), get_right(row, y+1))
+
+        matched_letters = set()
+        for word in possible_words:
+            match = re.search(regex, word)
+            if match:
+                matched_letters.add(match.group(1))
+
+        searched = [ALPHABET.index(l) for l in matched_letters]
+        if len(matched_letters) == 0 or 26 in possible_letters:
+            searched.append(26)
+
+        if is_fixed_left and is_fixed_right:
+            return searched, False
+
+        if is_26_left or is_26_right:
             return possible_letters, True
-        if is_fixed_left:
-            letter_left = ALPHABET[row[y-1][0]]
-            search = r"{}([{}])(?:[{}]|\b)" \
-                     .format(letter_left,
-                             ''.join([ALPHABET[l] for l in possible_letters]),
-                             ''.join([ALPHABET[l] for l in row[y+1]]))
-            #print(search)
-            matched_words = set()
-            matched_letters = set()
-            for word in possible_words:
-                try:
-                    match = re.search(search, word)
-                except Exception:
-                    pdb.set_trace()
-                if match:
-                    matched_words.add(match.string)
-                    matched_letters.add(match.group(1))
-            if len(matched_words) == 0:
-                return [26], False
-            return ([ALPHABET.index(l) for l in matched_letters], False)
 
-        if is_26_right:
-            return possible_letters, True
-        if is_fixed_right:
-            letter_right = ALPHABET[row[y+1][0]]
-            search = r"(?:[{}]|\b)([{}]){}" \
-                     .format(''.join([ALPHABET[l] for l in row[y-1]]),
-                             ''.join([ALPHABET[l] for l in possible_letters]),
-                             letter_right)
-            #print(search)
-            matched_words = set()
-            matched_letters = set()
-            for word in possible_words:
-                match = re.search(search, word)
-                if match:
-                    matched_words.add(match.string)
-                    matched_letters.add(match.group(1))
-            if len(matched_words) == 0:
-                return [26], False
-            return ([ALPHABET.index(l) for l in matched_letters], False)
+        if is_fixed_left or is_fixed_right:
+            return searched, False
 
         return possible_letters, False
 
@@ -353,8 +274,8 @@ class CrosswordsHdlr(Conshdlr):
                     possible_letters = possible_letters_v
                 elif not intersect_h:
                     possible_letters = possible_letters_h
-                elif len(possible_letters_h) == len(ALPHABET) and len(possible_letters_v) == len(ALPHABET):
-                    return SCIP_RESULT.CUTOFF
+                # elif len(possible_letters_h) == len(ALPHABET) and len(possible_letters_v) == len(ALPHABET):
+                #     return SCIP_RESULT.CUTOFF
                 else:
                     possible_letters = set(possible_letters_h).intersection(set(possible_letters_v))
 
@@ -362,6 +283,7 @@ class CrosswordsHdlr(Conshdlr):
                 #print("pos: [{}][{}] {}".format(x, y, possible_letters))
                 #pdb.set_trace()
                 if len(possible_letters) == 0:
+                    print("CUTOFF")
                     return SCIP_RESULT.CUTOFF
 
                 for i in range(len(ALPHABET)):
@@ -377,33 +299,4 @@ class CrosswordsHdlr(Conshdlr):
 
     def consprop(self, constraints, nusefulconss, nmarkedconss, proptiming):
         result = self.propagate_cons(constraints[0])
-        # if result == SCIP_RESULT.DIDNOTFIND:
-        #     solution = np.zeros([self.row, self.col]).tolist()
-        #     fixed_letters = np.zeros([self.row, self.col])
-
-        #     for x in range(self.row):
-        #         for y in range(self.col):
-        #             solution[x][y] = []
-        #             fixed_letters[x][y] = -1
-
-        #     fixed_vars = 0
-        #     for key, var in constraints[0].data.vars.items():
-        #         x, y, l = key
-        #         # Not fixed but possible
-        #         if var.getUbLocal() >= 0.5 and var.getLbLocal() <= 0.5:
-        #             solution[x][y].append(l)
-
-        #         # Fixed
-        #         if var.getLbLocal() >= 0.5:
-        #             solution[x][y].append(l)
-        #             fixed_letters[x][y] = l
-        #             fixed_vars += 1
-
-        #     for row in solution:
-        #         col = []
-        #         for letter in row:
-        #             col.append([ALPHABET[l] for l in letter])
-        #         print("{}".format(col))
-        #     print("-"*6)
-        #     pdb.set_trace()
         return {"result": result}
