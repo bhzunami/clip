@@ -159,7 +159,7 @@ class CrosswordsHdlr(Conshdlr):
             return part
 
         regex = r"{}([{}]){}".format(get_left(row, y-1), get_chars(possible_letters), get_right(row, y+1))
-
+        
         matched_letters = set()
         for word in possible_words:
             match = re.search(regex, word)
@@ -283,7 +283,6 @@ class CrosswordsHdlr(Conshdlr):
                 #print("pos: [{}][{}] {}".format(x, y, possible_letters))
                 #pdb.set_trace()
                 if len(possible_letters) == 0:
-                    print("CUTOFF")
                     return SCIP_RESULT.CUTOFF
 
                 for i in range(len(ALPHABET)):

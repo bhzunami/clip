@@ -53,7 +53,7 @@ def solve(row=10, col=10):
     conshdlr = CrosswordsEasyHdlr(DICTIONARY, row=row, col=col, logger=logger)
     model.includeConshdlr(conshdlr, "crossword",
                           "Crossword", chckpriority=-10, maxprerounds=1,
-                          enfopriority=-10, propfreq=10)
+                          enfopriority=-10, propfreq=2)
 
     # Add horizontal
     vars = {}
@@ -92,7 +92,7 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 5
+    count = 3
     solve(row=count, col=count)
 
 if __name__ == "__main__":

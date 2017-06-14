@@ -53,7 +53,7 @@ class CrosswordsEasyHdlr(Conshdlr):
                 try:
                     word.append(cross[x][y])
                 except IndexError:
-                    print("Not valid")
+                    #print("Not valid")
                     return False
             # Create word
             builded_words.append(''.join(word))

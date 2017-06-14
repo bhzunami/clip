@@ -46,25 +46,25 @@ def solve(row=10, col=10):
     for x in range(row):
         for y in range(col):
             for l in range(0, len(ALPHABET)):
-                s[x, y, l] = model.addVar(vtype="B", name="{}-{}-{}".format(x, y, l))
+                s[x, y, l] = model.addVar(vtype="B", name="g{}{}{}".format(x, y, l))
 
     # ROW
     for r in range(row):
         for i, words in enumerate(DICTIONARY):
-            w_h[r, i] = model.addVar(vtype="B", name="word-{}-{}".format(r, i))
-            w_v[r, i] = model.addVar(vtype="B", name="word-{}-{}".format(r, i))
-        r_[r] = model.addVar(vtype="B", name="row-{}".format(r))
-        c_[r] = model.addVar(vtype="B", name="row-{}".format(r))
+            w_h[r, i] = model.addVar(vtype="B", name="wordx{}{}".format(r, i))
+            w_v[r, i] = model.addVar(vtype="B", name="wordx{}{}".format(r, i))
+        r_[r] = model.addVar(vtype="B", name="row{}".format(r))
+        c_[r] = model.addVar(vtype="B", name="row{}".format(r))
 
     # Nur 1 Buchstaben pro Feld
     for x in range(row):
         for y in range(col):
             model.addCons(quicksum(s[x, y, l] for l in range(0, len(ALPHABET))) == 1)
 
-    # Nur 1 Buchstaben pro Feld
-    for x in range(row):
-        for y in range(col):
-            model.addCons(quicksum(s[x, y, l] for l in range(0, len(ALPHABET))) == 1)
+    # # Nur 1 Buchstaben pro Feld
+    # for x in range(row):
+    #     for y in range(col):
+    #         model.addCons(quicksum(s[x, y, l] for l in range(0, len(ALPHABET))) == 1)
 
     # CONSTRAINTS
     # C A N
@@ -105,8 +105,8 @@ def solve(row=10, col=10):
         model.addCons(r_[r] <= 1)
 
     # ein wort
-    for r in range(row):
-        model.addCons(quicksum(w_h[r, i] for i in range(0, len(DICTIONARY))) == 1)
+    # for r in range(row):
+    #     model.addCons(quicksum(w_h[r, i] for i in range(0, len(DICTIONARY))) == 1)
 
     # Does not work
     #model.addCons(quicksum(r_[r] for r in range(0, 3)) == 1)
@@ -139,7 +139,8 @@ def solve(row=10, col=10):
 
 
     model.setBoolParam("misc/allowdualreds", False)
-    #model.writeProblem('/tmp/Crossword.lp')
+    model.writeProblem('/tmp/Crossword_test_6x6.lp')
+    #model.writeProblem('/tmp/Crossword_test_6x6.mps')
     #model.hideOutput()
     model.optimize()
 
@@ -164,7 +165,8 @@ def solve(row=10, col=10):
 
 
 def main():
-    count = 4
+    count = 3
+
     solve(row=count, col=count)
 
 if __name__ == "__main__":

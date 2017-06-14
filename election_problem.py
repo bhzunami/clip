@@ -15,11 +15,11 @@ def generate_votes(row=10, col=10, multiplier=3):
     votes = {}
     sum_demo = 0
     sum_repu = 0
-    random.seed(0)
+    random.seed(10)
     for x in range(row):
         for y in range(col):
-            democrats = random.randint(100, 5000)
             republicans = random.randint(100, 5000) * multiplier
+            democrats = random.randint(100, 5000)
             sum_demo += democrats
             sum_repu += republicans
             votes[x, y] = {'d': democrats*0.01, 'r': republicans*0.01}
@@ -96,10 +96,10 @@ def solve(row=10, col=10, constituency=10):
     # Diese Variable wird gesetzt: Diese Var ist 1 wen w0_d grösser ist als w0_r und ansonsten 0
     bimM = 20 * constituency * 2
     for w in range(constituency):
-        model.addCons(wd[w] - wr[w] <= 10000 * winner[w])
-        model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
-        #model.addCons(wd[w] + 10000 * (1 - winner[w]) >= wr[w])
-        #model.addCons(wd[w] - 10000 * winner[w] <= wr[w])
+        #model.addCons(wd[w] - wr[w] <= 10000 * winner[w])
+        #model.addCons(winner[w] <= (wd[w] - wr[w]) * winner[w])
+        model.addCons(wd[w] + 10000 * (1 - winner[w]) >= wr[w])
+        model.addCons(wd[w] - 10000 * winner[w] <= wr[w])
 
         if w > 0:
             model.addCons(wd[w-1] >= wd[w])

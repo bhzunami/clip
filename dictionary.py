@@ -18,11 +18,11 @@ http://worder.cat/wortsucher
 
 def write(a):
     D = a.split()
-    test = [e for e in D if 'Ä' not in e and 'Ö' not in e and 'Ü' not in e]
+    test = [e.upper() for e in D if 'Ä' not in e.upper() and 'Ö' not in e.upper() and 'Ü' not in e.upper() and len(e) == 6]
     with open('test.txt', 'w') as file:
         file.write("{}".format(test))
 """
-ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 DICTIONARY_ = ['AB', 'AB', 'AA', 'BB']
 DICTIONARY_ = ['CAN', 'AGE', 'ROW', 'CAR', 'AGO', 'NEW']
@@ -32,6 +32,7 @@ DICTIONARY_ = ['DEBIT', 'INANE', 'CUTUP', 'EROSE', 'RENTE', 'DICER', 'ENURE',
 DICTIONARY_ = ['CALLET', 'OPIATE', 'MIMBAR', 'PENILE', 'OCELOT',
                'SERENE', 'COMPOS', 'APIECE', 'LIMNER', 'LABILE', 'ETALON', 'TERETE']
 
+DICTIONARY = ['CAN', 'AGE', 'ROW', 'CAR', 'AGO', 'NEW', 'AAL', 'AAS', 'ABC', 'ABI', 'ABM', 'ABO', 'ABT', 'ACH', 'ACL', 'ADA', 'ADE', 'AEG', 'AFA', 'AGP', 'AIX', 'AKT', 'AKW', 'ALB', 'ALF', 'ALL', 'ALM', 'ALP', 'ALS', 'ALT', 'ALU', 'AMD', 'AMI', 'AMT', 'ANS', 'AOK', 'AOL', 'AOT', 'API', 'ARD', 'ARG', 'ARM', 'ART', 'ASS', 'AST', 'ATM', 'AUE', 'AUF', 'AUG', 'AUS', 'AXT', 'BAD', 'BAI', 'BAR', 'BAT', 'BAU', 'BBC', 'BDE', 'BEA', 'BEI', 'BEN', 'BEO', 'BGB', 'BGH', 'BGS', 'BIN', 'BIP', 'BIS', 'BIT', 'BKA', 'BLZ', 'BMW', 'BND', 'BOA', 'BOB', 'BOG', 'BON', 'BOT', 'BOX', 'BOY', 'BRD', 'BSE', 'BSP', 'BTX', 'BUB', 'BUG', 'BUK', 'BUS', 'BVG', 'CAD', 'CDC', 'CDS', 'CDU', 'CHI', 'CIA', 'CPU', 'CSU', 'CUM', 'DAR', 'DAS', 'DAX', 'DDR', 'DEM', 'DEN', 'DER', 'DES', 'DFB', 'DGB', 'DIA', 'DIE', 'DIN', 'DIR', 'DIV', 'DKP', 'DNS', 'DOM', 'DON', 'DOS', 'DOW', 'DPA', 'DPI', 'DRK', 'DSL', 'DTP', 'DUO', 'DUR', 'DVD', 'ECK', 'ECU', 'EDV', 'EGO', 'EHE', 'EID', 'EIN', 'EIS', 'EKG', 'ELF', 'ELI', 'EMS', 'ENG', 'ERZ', 'ESC', 'ETH', 'EVA', 'EWG', 'EWS', 'EWU', 'EZB', 'FAN', 'FAQ', 'FAX', 'FAZ', 'FBI', 'FDJ', 'FDP', 'FEE', 'FEZ', 'FFR', 'FIT', 'FIX', 'FKK', 'FKT', 'FLN', 'FTP', 'FUG', 'FUO', 'GAB', 'GAG', 'GAR', 'GAS', 'GAU', 'GBR', 'GEH', 'GEL', 'GEN', 'GEW', 'GEZ', 'GHZ', 'GIB', 'GMT', 'GNU', 'GPL', 'GPS', 'GST', 'GUS', 'GUT', 'HAB', 'HAI', 'HAT', 'HAU', 'HER', 'HEU', 'HIE', 'HIN', 'HIT', 'HIV', 'HOB', 'HOC', 'HOF', 'HOL', 'HPS', 'HUB', 'HUF', 'HUT', 'IBM', 'ICE', 'ICH', 'ICI', 'IDE', 'IHK', 'IHM', 'IHN', 'IHR', 'III', 'INS', 'ION', 'IRA', 'IRC', 'IRE', 'IRQ', 'IRR', 'ISO', 'ISP', 'ISS', 'IST', 'ITT', 'IWF', 'JAN', 'JET', 'JIM', 'JOB', 'JOD', 'JOY', 'JUX', 'KAI', 'KAM', 'KAP', 'KAU', 'KDE', 'KFZ', 'KGB', 'KHZ', 'KIR', 'KIT', 'KLM', 'KLO', 'KOT', 'KPD', 'KPJ', 'KUH', 'KUR', 'KWU', 'LAG', 'LAN', 'LAS', 'LAU', 'LAX', 'LCD', 'LCR', 'LED', 'LEG', 'LID', 'LIZ', 'LKW', 'LOB', 'LOG', 'LOK', 'LOS', 'LOT', 'LSD', 'LSI', 'LUD', 'LUG', 'LZW', 'MAC', 'MAD', 'MAG', 'MAI', 'MAL', 'MAN', 'MAO', 'MAX', 'MBB', 'MDR', 'MHZ', 'MIR', 'MIT', 'MIX', 'MOB', 'MOL', 'MUS', 'MUT', 'MUX', 'NAH', 'NDP', 'NDR', 'NEC', 'NEU', 'NEW', 'NFS', 'NIE', 'NIL', 'NOT', 'NPD', 'NRW', 'NSU', 'NTT', 'NUN', 'NUR', 'NUT', 'NVA', 'OCR', 'ODE', 'OEM', 'OFT', 'OHM', 'OHO', 'OHR', 'OMA', 'OPA', 'ORF', 'ORT', 'OST', 'PAN', 'PCI', 'PCS', 'PDF', 'PDS', 'PER', 'PEU', 'PGP', 'PHI', 'PIK', 'PIN', 'PKK', 'PKW', 'PLO', 'PLZ', 'POL', 'POP', 'PPP', 'PPS', 'PRO', 'PTT', 'PUB', 'PUR', 'PUT', 'QMM', 'RAD', 'RAF', 'RAL', 'RAM', 'RAN', 'RAR', 'RAT', 'RAU', 'REG', 'REH', 'REN', 'RFC', 'RIO', 'ROH', 'ROM', 'ROT', 'RPM', 'RTC', 'RTL', 'RUF', 'RUM', 'RUN', 'RUO', 'RWE', 'SAG', 'SAH', 'SAM', 'SAN', 'SAO', 'SAP', 'SAS', 'SAU', 'SED', 'SEE', 'SEI', 'SET', 'SEX', 'SFR', 'SGI', 'SIE', 'SIR', 'SKI', 'SMD', 'SOG', 'SOS', 'SPD', 'SPE', 'SQL', 'SRI', 'SUD', 'SUN', 'TAG', 'TAL', 'TAT', 'TAU', 'TCP', 'TEE', 'TEX', 'TFT', 'TIM', 'TNT', 'TOD', 'TOM', 'TON', 'TOP', 'TOR', 'TOT', 'TUE', 'TUN', 'TUT', 'TWA', 'TYP', 'UDE', 'UDO', 'UFO', 'UHR', 'UHU', 'UKW', 'ULK', 'ULM', 'UMS', 'UND', 'UNI', 'UNO', 'UNS', 'URL', 'USA', 'USB', 'USS', 'UTA', 'UTE', 'UWE', 'VAG', 'VAN', 'VDE', 'VDI', 'VFB', 'VGA', 'VHS', 'VIA', 'VII', 'VOM', 'VON', 'VOR', 'VPN', 'WAL', 'WAR', 'WAS', 'WDR', 'WEB', 'WEG', 'WEH', 'WEM', 'WEN', 'WER', 'WIE', 'WIM', 'WIR', 'WOG', 'WUT', 'XII', 'XIV', 'XML', 'XON', 'YEN', 'ZAR', 'ZDF', 'ZEH', 'ZOG', 'ZOO', 'ZUG', 'ZUM', 'ZUR']
 DICTIONARY_ = ['PIER', 'IDLE', 'NOSE', 'SLED', 'PINS',
               'KIEL', 'KICK', 'KHAN', 'KIES', 'KIEW', 'KIMM', 'KILO', 'KILL', 'KESS',
               'KERN', 'KEIM', 'KEIL', 'KEHR', 'KEIN', 'KEKS', 'KERL', 'KENT', 'KIND',
@@ -155,14 +156,7 @@ DICTIONARY_ = ['PIER', 'IDLE', 'NOSE', 'SLED', 'PINS',
               'EUCH', 'EUER', 'EURE', 'EULE']
 
 
-DICTIONARY_ = ['PIERR', 'IDLEE', 'NOSEE', 'SLEDK', 'SLEEK', 'REEKK' 'PINSS', 'IDOLL' 'AALEN', 'AALES', 'AALST', 'AALTE', 'AASES', 'ABART', 'ABBAT', 'ABBAU', 'ABBOG', 'ABELS', 'ABEND', 'ABGAB', 'ABGAS', 'ABHOB', 'ABKAM', 'ABLAG', 'ABMAO', 
-'ABORT', 'ABRUF', 'ABSAH', 'ABSUD', 'ABTAT', 'ABTEI', 'ABTES', 'ABTUE', 'ABTUN', 'ABTUT', 'ABWEG', 'ABWOG', 'ABZOG', 
-'ABZUG', 'ACHIM', 'ACHSE', 'ACHTE', 'ACKER', 'ACKRE', 'ACRYL', 'ADAMS', 'ADELE', 'ADELN', 'ADELS', 'ADELT', 'ADERN', 
-'ADIEU', 'ADLER', 'ADLIG', 'ADOBE', 'ADOLF', 'ADRIA', 'ADRIG', 'AEROB', 'AFFEN', 'AFFIG', 'AFTER', 'AGAVE', 'AGENT', 
-'AGFAS', 'AGILE', 'ARIEN', 'ARIER', 'ARMEE', 'ARMEM', 'ARMEN', 'ARMER', 'ARMES', 'ARMUT', 'ARNDT', 'ARNOS', 'AROMA', 
-'AROSA', 'ARRAY', 'ARSCH', 'ARSEN', 'ARTEN', 'ARTET', 'ARTIG', 'ARTUS', 'ASCHE', 'ASCII', 'ASIAT', 'ASIEN', 'ASKET', 
-'ASPIK', 'ASSEL', 'ASSEN', 'ASSES', 'ASTER', 'ASTES', 'ASYLS', 'ATARI', 'ATEMS', 'ATHEN', 'ATLAS', 'ATMEN', 'ATMET', 
-'ATOLL', 'ATOME', 'ATOMS', 'AUDIS', 'AUGEN', 'AUGES', 'AUOEN', 'AUOER', 'AUREL', 'AUTOR', 'AUTOS', 'AXELS', 'AXIOM', 
+DICTIONARY_ = ['PIERR', 'IDLEE', 'NOSEE', 'SLEDK', 'SLEEK', 'REEKK','PINSS', 'IDOLL', 'AALEN', 'AALES',  
 'BOOMS', 'BOOMT', 'BOOTE', 'DIELE', 'DIENE', 'DIENT', 'DIESE', 
 'DILDO', 'DILLS', 'DIMME', 'DIMMT', 'DINAR', 'DINGE', 'DINGS', 'DIODE', 'DIPOL', 'DIRKS', 'DIRNE', 'DIVAS', 'DIWAN', 
 'DOCHT', 'DOCKS', 'DOGEN', 'DOGGE', 'DOGMA', 'DOHLE', 'DOLCH', 'DOLLY', 'DOMEN', 'DOMES', 'DONAU', 'DOOFE', 'DORAS', 
@@ -212,86 +206,13 @@ DICTIONARY_ = ['PIERR', 'IDLEE', 'NOSEE', 'SLEDK', 'SLEEK', 'REEKK' 'PINSS', 'ID
 'UNTAT', 'UNTEN', 'UNTER', 'UNZEN', 'URAHN', 'URALT', 'URANS', 'URBAN', 'URIGE', 'URINS', 'URNEN', 'USERS', 'WAAGE', 
 'DEBIT', 'INANE', 'CUTUP', 'EROSE', 'RENTE', 'DICER', 'ENURE', 'BATON', 'INUST', 'TEPEE']
 
-DICTIONARY_ = ['ABORTS', 'ABRATE', 'ABRAUM', 'ABREDE', 'ABREGE', 'ABREGT', 'ABRIEB', 'ABRIET', 'ABRISS', 'ABRUFE',
+DICTIONARY_ = [ 'CALLET', 'OPIATE', 'MIMBAR', 'PENILE', 'OCELOT',
+               'SERENE', 'COMPOS', 'APIECE', 'LIMNER', 'LABILE', 'ETALON', 'TERETE','ABORTS', 'ABRATE', 'ABRAUM', 'ABREDE', 'ABREGE', 'ABREGT', 'ABRIEB', 'ABRIET', 'ABRISS', 'ABRUFE',
                'ABRUFS', 'ABRUFT', 'ABRUPT', 'ABSAGE', 'ABSAGT', 'ABSAHT', 'ABSANK', 'ABSATZ', 'ABSEHE', 'ABSEHT',
                'ABSTOO', 'ABSUDE', 'ABSURD', 'ABTEIL', 'ABTRAT', 'ABTRUG', 'ABTUST', 'ABWAHL', 'ABWARF', 'ABWEGE',
                'ABWEGS', 'ABWEHR', 'ABWICH', 'ABWIND', 'ABWOGT', 'ABWURF', 'ABZOGT', 'ABZUGS', 'ACETON', 'ACHIMS',
                'ACHSEL', 'ACHSEN', 'ACHSIG', 'ACHTEL', 'ACHTEM', 'ACHTEN', 'ACHTER', 'ACHTES', 'ACHTET', 'ACHTLE',
-               'ACIDUM', 'CALLET', 'OPIATE', 'MIMBAR', 'PENILE', 'OCELOT', 'BOOTET', 'BORDEN', 'BORDES', 'BORGEN',
-               'BORGST', 'BORGTE', 'BORKEN', 'BORKUM', 'BORSTE', 'BORTEN', 'BOSSEN', 'BOSSES', 'BOSTON', 'BOTANK',
-               'BOTEST', 'BOUCLE', 'BOXEND', 'BOXERN', 'BOXERS', 'BOXEST', 'BOXTEN', 'BOXTET', 'BRACHT', 'BRAHMS',
-               'BRANDE', 'BRANDS', 'BRANDT', 'BRATEN', 'BRATET', 'BRAUCH', 'BRAUEN', 'BRAUER', 'BRAUNE', 'BRAUSE',
-               'BRAUST', 'BRAUTE', 'BRAVEM', 'BRAVEN', 'BRAVER', 'BRAVES', 'BRAVUR', 'BRECHE', 'BRECHT', 'CABRIO',
-               'CACHES', 'CALVIN', 'CAMION', 'CAMPER', 'CAMPUS', 'CANNES', 'CANONS', 'CARDIN', 'CARLOS', 'CAROLA', 
-               'CAROLS', 'CARUSO', 'CASINO', 'CASTRO', 'CATHYS', 'CELLOS', 'CENTER', 'CENTOS', 'CETERA', 'CEYLON', 
-               'CHALET', 'CHANCE', 'CHANEL', 'CHARGE', 'CHARME', 'CHARTA', 'CHARTS', 'CHATEN', 'CHATET', 'CHECKS', 
-               'EHRTET', 'EHRUNG', 'EICHEL', 
-               'EICHEN', 'EICHST', 'EICHTE', 'EIFERE', 'EIFERN', 'EIFERS', 'EIFERT', 'EIFRIG', 'EIGELB', 'EIGENE', 
-               'EIGENS', 'EIGNEN', 'EIGNER', 'EIGNET', 'EILAND', 'EILEND', 'EILGUT', 'EILIGE', 'EILTEN', 'EILTET', 
-               'EILZUG', 'EIMERN', 'EIMERS', 'EINBAU', 'EINEHE', 'EINEND', 'EINGAB', 'EINHER', 'EINIGE', 'EINIGT', 
-               'EINLUD', 'EINMAL', 'EINRAD', 'EINSAH', 'EINSAM', 'EINSEN', 'EINTEN', 'EINTET', 'EINZEL', 'EINZIG', 
-               'EINZOG', 'EINZUG', 'EISENS', 'EISERN', 'EISIGE', 'EITERE', 'EITERN', 'EITERS', 'EITERT', 'EITLEM', 
-               'EITLEN', 'EITLER', 'EITLES', 'EITRIG', 'EIWEIO', 'EKELIG', 'EKELND', 'EKELST', 'EKELTE', 'EKLIGE', 
-               'EKZEME', 'EKZEMS', 'ELCHEN', 'ELCHES', 'ELEGIE', 'ELENDE', 'ELENDS', 'ELFMAL', 'ELFTEL', 'ELFTEM', 
-               'ELFTEN', 'ELFTER', 'ELFTES', 'ELITEN', 'ELIZAS', 'ELSASS', 'ELSTER', 'ELTERN', 'EMANZE', 'EMBLEM', 
-               'EMBRYO', 'EMDENS', 'EMILIA', 'EMIRAT', 'EMPORE', 'EMSIGE', 'ENDEND', 'ENDENS', 'ENDEST', 'ENDETE', 
-               'ENDLOS', 'ENDUNG', 'ENGELN', 'ENGELS', 'ENGERE', 'ENGSTE', 'ENGTEN', 'ENGTET', 'ENKELN', 'ENKELS', 
-               'ENORME', 'ENTBOT', 'ENTERE', 'ENTERN', 'ENTERT', 'ENTHOB', 'ENTKAM', 'ENTLUD', 'ENTZOG', 'ENTZUG', 
-               'ENZIAN', 'ENZYME', 'ENZYMS', 'EPIKUR', 'EPILOG', 'EPISCH', 'EPOCHE', 'EPOXYD', 'EPSONS', 'EQUIPE', 
-               'ERAHNE', 'ERAHNT', 'ERBAUE', 'ERBAUT', 'ERBEBE', 'ERBEBT', 'ERBEND', 'ERBENS', 'ERBGUT', 'ERBOST', 
-               'ERBSEN', 'ERBTEN', 'ERBTET', 'ERDEND', 'ERDENS', 'ERDEST', 'ERDETE', 'ERDGAS', 'ERDIGE', 'ERDNAH', 
-               'ERDUNG', 'EREILE', 'EREILT', 'EREMIT', 'ERERBT', 'ERFAND', 'ERFOLG', 'ERFROR', 'ERFUHR', 'ERFURT', 
-               'ERGABT', 'ERGEBE', 'ERGEBT', 'ERGEHE', 'ERGEHT', 'ERGIBT', 'ERGING', 'ERGOSS', 'ERGUSS', 'ERHALT', 
-               'ERHARD', 'ERHEBE', 'ERHEBT', 'ERHOBT', 'ERHOLE', 'ERHOLT', 'ERICHS', 'ERIKAS', 'ERKERN', 'ERKERS', 
-               'ERKORT', 'ERLAGT', 'ERLASS', 'ERLEBE', 'ERLEBT', 'ERLEGE', 'ERLEGT', 'ERLIEF', 'ERLIEO', 'ERLITT', 
-               'ERNEUT', 'ERNSTE', 'ERNTEN', 'ERNTET', 'EROBRE', 'EROGEN', 'EROTIK', 'ERRANG', 'ERRATA', 'ERRATE', 
-               'ERREGE', 'ERREGT', 'ERRIET', 'ERSANN', 'ERSATZ', 'ERSEHE', 'ERSEHT', 'ERSTEM', 'ERSTEN', 'ERSTER', 
-               'ERSTES', 'ERTRAG', 'ERTRUG', 'ERWARB', 'ERWERB', 'ERWIES', 'ERWINS', 'ERWIRB', 'ERWOGT', 'ERZOGT', 
-               'ESCHEN', 'ESCHER', 'ESCUDO', 'ESELEI', 'ESKIMO', 'ESKUDO', 'ESSAYS', 'ESSBAR', 'ESSEND', 'ESSENS', 
-               'ESSENZ', 'ESSERN', 'ESSERS', 'ESSIGS', 'ETAGEN', 'ETAPPE', 'ETWAIG', 'EUKLID', 'EULERS', 'EUNUCH', 
-               'EUROPA', 'EUTERN', 'EUTERS', 'EWIGEM', 'EWIGEN', 'EWIGER', 'EWIGES', 'EXAKTE', 'EXAMEN', 'EXILEN', 
-               'EXKURS', 'EXOGEN', 'EXOTEN', 'EXOTIN', 'EXPORT', 'EXPOSE', 'EXTERN', 'EXTRAS', 'EXTREM', 'EXZESS',
-               'SERENE', 'COMPOS', 'APIECE', 'LIMNER', 'LABILE', 'ETALON', 'TERETE', 'GABELE', 'GABELN', 'GABELT', 
-               'GABLER', 'GABLIG', 'GACKRE', 'GAFFEN', 'GAFFST', 'GAFFTE', 'GALANT', 'GALGEN', 'GALLEN', 'GALLIG', 
-               'GALOPP', 'GALTEN', 'GALTET', 'GALTST', 'GANDHI', 'GANGES', 'GANOVE', 'GANZEM', 'GANZEN', 'GANZER', 
-               'GANZES', 'GARAGE', 'GARANT', 'GARBEN', 'GARBOS', 'GARDEN', 'GARNEN', 'GARNES', 'GARTEN', 'GASSEN', 
-               'GASTES', 'GASTOD', 'GATTEN', 'GATTER', 'GATTIN', 'GAUCHO', 'GAUKEL', 'GAUKLE', 'GAULLE', 'GAUMEN', 
-               'GAUNER', 'GEAHNT', 'GEBART', 'GEBAUT', 'GEBEBT', 'GEBEIN', 'GEBELL', 'GEBEND', 'GEBENS', 'GEBERN', 
-               'GEBERS', 'GEBETE', 'GEBETS', 'GEBIET', 'GEBISS', 'GEBOTE', 'GEBOTS', 'GEBOXT', 'GEBUNG', 'GEBURT', 
-               'GECKEN', 'GEDECK', 'GEDIEH', 'GEDOPT', 'GEDULD', 'GEEHRT', 'GEEILT', 'GEEINT', 'GEERBT', 'GEFAHR', 
-               'GEFAXT', 'GEFEGT', 'GEFEIT', 'GEFIEL', 'GEFIXT', 'GEFROR', 'GEGEND', 'GEGNER', 'GEHABE', 'GEHABT', 
-               'GEHALT', 'GEHEGE', 'GEHEGT', 'GEHEIM', 'GEHEIO', 'GEHEND', 'GEHENS', 'GEHEUL', 'GEHIRN', 'GEHOLT', 
-               'GEHUPE', 'GEHUPT', 'GEHWEG', 'GEIERN', 'GEIERS', 'GEIFER', 'GEIGEN', 'GEIGER', 'GEIGST', 'GEIGTE', 
-               'GEILEM', 'GEILEN', 'GEILER', 'GEILES', 'GEILST', 'GEIOEL', 'GEIOEN', 'GEIOLE', 'GEIRRT', 'GEISEL', 
-               'GEISHA', 'GEISTE', 'GEISTS', 'GEIZEN', 'GEIZES', 'GEIZIG', 'GEIZTE', 'GEJAGT', 'GEKAUT', 'GELABT', 
-               'GELAGE', 'GELANG', 'GELASS', 'GELBEM', 'GELBEN', 'GELBER', 'GELBES', 'GELDER', 'GELDES', 'GELEBT', 
-               'GELEES', 'GELEGT', 'GELEIS', 'GELEIT', 'GELENK', 'GELIND', 'GELLEN', 'GELLST', 'GELLTE', 'GELOBE', 
-               'GUSSES', 'FABELN', 
-               'FABIAN', 'FABRIK', 'FACHEM', 'FACHEN', 'FACHER', 'FACHES', 'FACHST', 'FACHTE', 'FACKEL', 'FACKLE', 
-               'FADENS', 'FADERE', 'FADEST', 'FAHLEM', 'FAHLEN', 'FAHLER', 'FAHLES', 'FAHLST', 'FAHNDE', 'FAHNEN', 
-               'FAHREN', 'FAHRER', 'FAHRIG', 'FAIBLE', 'FAIREM', 'FAIREN', 'FAIRER', 'FAIRES', 'FAKTEN', 'FAKTES', 
-               'FAKTOR', 'FAKTUM', 'FALBEM', 'FALBEN', 'FALBER', 'FALBES', 'FALKEN', 'FALLEN', 'FALLES', 'FALSCH', 
-               'FALTEN', 'FALTER', 'FALTET', 'FALTIG', 'FAMOSE', 'FANDEN', 'FANDET', 'FANDST', 'FANGEN', 'FANGES', 
-               'FARBEN', 'FARBIG', 'FARMEN', 'FARMER', 'FARNEN', 'FARNES', 'FASANE', 'FASANS', 'FASELE', 'FASELN', 
-               'FASELT', 'FASERN', 'FASRIG', 'FASSEN', 'FASSES', 'FASSTE', 'FASTEN', 'FASTET', 'FATALE', 'FATIMA', 
-               'FATUMS', 'FAUCHE', 'FAUCHT', 'FAULEM', 'FAULEN', 'FAULER', 'FAULES', 'FAULIG', 'FAULST', 'FAULTE', 
-               'FAUNEN', 'FAXEND', 'FAXEST', 'FAXTEN', 'FAXTET', 'FAZITE', 'FAZITS', 'FECHTE', 'FEDERE', 'FEDERN', 
-               'FEDERT', 'FEDORA', 'FEGEND', 'FEGTEN', 'FEGTET', 'FEHDEN', 'FEHLEN', 'FEHLER', 'FEHLST', 'FEHLTE', 
-               'FEIERE', 'FEIERN', 'FEIERT', 'FEIGEM', 'FEIGEN', 'FEIGER', 'FEIGES', 'FEIGST', 'FEILEN', 'FEILST', 
-               'FEILTE', 'FEINDE', 'FEINDS', 'FEINEM', 'FEINEN', 'FEINER', 'FEINES', 'FEINST', 'FELDER', 'FELDES', 
-               'FELGEN', 'FELLEN', 'FELSEN', 'FELSIG', 'FERIEN', 'FERKEL', 'FERMAT', 'FERMIS', 'FERNAB', 'FERNEM', 
-               'FERNEN', 'FERNER', 'FERNES', 'FERNST', 'FERSEN', 'FERTIG', 'FESCHE', 'FESSEL', 'FESSLE', 'FESTEM', 
-               'FESTEN', 'FESTER', 'FESTES', 'FETTEM', 'FETTEN', 'FETTER', 'FETTES', 'FETTIG', 'FETZEN', 'FETZIG', 
-               'FEUCHT', 'FEUDAL', 'FEUERE', 'FEUERN', 'FEUERS', 'FEUERT', 'FEURIG', 'FIASKO', 'FIBELN', 'FICHTE', 
-               'FICKEN', 'FICKER', 'FICKST', 'FICKTE', 'FIDELE', 'FIEBER', 'FIEBRE', 'FIELEN', 'FIELST', 'FIESEM', 
-               'FIESEN', 'FIESER', 'FIESES', 'FIKTIV', 'FILETS', 'FILIUS', 'FILMEN', 'FILMES', 'FILMST', 'FILMTE', 
-               'FILTER', 'FILTRE', 'FILZEN', 'FILZES', 'FILZIG', 'FILZTE', 'FIMMEL', 'FINALE', 'FINANZ', 'FINDEN', 
-               'FINDER', 'FINDET', 'FINDIG', 'FINGEN', 'FINGER', 'FINGST', 'FINITE', 'FINKEN', 'FINNEN', 'FINNIN', 
-               'FINTEN', 'FIRMEN', 'FIRSTE', 'FIRSTS', 'FISCHE', 'FISCHS', 'FISCHT', 'FISKUS', 'FISTEL', 'FITTEM', 
-               'FITTEN', 'FITTER', 'FITTES', 'FIXEND', 'FIXERN', 'FIXERS', 'FIXEST', 'FIXTEN', 'FIXTET', 'FJORDE', 
-               'FJORDS', 'FLACHE', 'FLACHS', 'FLACON', 'FLADEN', 'FLAGGE', 'FLAGGT', 'FLAKON', 'FLAMEN', 'FLAMME', 
-               'FLAMMT', 'FLANKE', 'FLAUEM', 'FLAUEN', 'FLAUER', 'FLAUES', 'FLAUMS', 'FLAUST', 'FLAUTE', 'FLECKE', 
-               'FLECKS', 'FLEGEL', 'FLEHEN', 'FLEHST', 'FLEHTE']
+               'ACIDUM',  'BOOTET', 'BORDEN', 'BORDES', 'BORGEN' ]
 
 """
 T U N
@@ -338,7 +259,7 @@ G R U N D E
 
 
 DICTIONARY_ = ['HAU', 'BAND', 'ASSE', 'DEIN', 'BAD', 'HASE', 'ANSI', 'UDEN']
-DICTIONARY = ['HAUS', 'LUX', 'FERD', 'BOD', 'FB', 'ALEO', 'UURD', 'SXD']
+DICTIONARY_ = ['HAUS', 'LUX', 'FERD', 'BOD', 'FB', 'ALEO', 'UURD', 'SXD']
 DICTIONARY_ = ['TUN', 'NUT', 'TAT', 'TOT']
 DICTIONARY_ = ['BA', 'BC']
 DICTIONARY_ = ['IN', 'IF', 'NUT', 'NO', 'FUN', 'TO']
@@ -367,6 +288,17 @@ DICTIONARY_ = ['BRAUSE', 'RASA', 'ANONYM', 'SALATE',
                'FIGUR', 'KLUEVER', 'FEIERN', 'BACKOFEN', 'REISSER',
                'LEBHAFT']
 
+
+"""
+B R A U S E
+R E G A T
+  G A G A N
+S A L A T E
+A L B E R E
+S U L T A N
+"""
+
+DICTIONARY_ = ['BRAUSE', 'REGAT', 'GAGAN', 'SALATE', 'ALBERE', 'SULTAN', 'BR', 'SAS', 'REGALU', 'AGALBL', 'UAGAET', 'STATRA', 'NEEN']
 DICTIONARY_ = ['BRAUSE', 'RASA', 'ANONYM', 'UHUS', 'SALATE',
                'DEN', 'LOS', 'BREZEL', 'ECK', 'NATION', 'ANHAND',
                'SOUL', 'ANSAGE', 'ALBEN', 'ORCA', 'INSEKT', 'DIEB',
